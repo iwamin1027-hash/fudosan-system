@@ -702,12 +702,31 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
 
           <!-- 住所入力 -->
           <div class="card" style="margin-bottom:14px;">
-            <div class="card-title">📍 対象地点の住所を入力</div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-              <input type="text" id="kankyou-addr" placeholder="例：神奈川県川崎市宮前区白幡台二丁目3番1" style="flex:1;min-width:280px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;outline:none;"/>
-              <button class="pbtn" id="kankyou-btn" onclick="generateKankyouReport()" style="white-space:nowrap;">🔍 レポート生成</button>
+            <div class="card-title">📍 対象地点を入力</div>
+
+            <!-- 住所入力 -->
+            <div style="margin-bottom:10px;">
+              <div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:4px;">① 住所から検索</div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <input type="text" id="kankyou-addr" placeholder="例：神奈川県相模原市南区鵜野森" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;outline:none;"/>
+                <button class="pbtn" id="kankyou-btn" onclick="generateKankyouReport()" style="white-space:nowrap;">🔍 レポート生成</button>
+              </div>
             </div>
-            <div style="margin-top:8px;font-size:11px;color:var(--hint);">※ OpenStreetMap/Nominatimを使用（無料・登録不要）</div>
+
+            <!-- 緯度経度入力 -->
+            <div style="background:var(--alight);border:1px solid var(--amid);border-radius:var(--r);padding:12px;">
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:8px;">② Google Mapから緯度経度を貼り付け（より正確）</div>
+              <div style="font-size:11px;color:var(--sub);margin-bottom:8px;line-height:1.7;">
+                Google Mapで場所を右クリック →「緯度経度をコピー」→ 下の欄に貼り付け<br>
+                <span style="font-size:10px;color:var(--hint);">例：35.5512, 139.3456　または　35.5512　と　139.3456　を別々に</span>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <input type="text" id="kankyou-latlng" placeholder="35.5512, 139.3456 または 35.5512139.3456" style="flex:1;min-width:220px;padding:8px 12px;border:1px solid var(--amid);border-radius:var(--r);font-size:13px;outline:none;font-family:monospace;"/>
+                <button class="pbtn" id="kankyou-latlng-btn" onclick="generateKankyouReportByLatLng()" style="white-space:nowrap;background:var(--accent);">📍 この位置でレポート生成</button>
+              </div>
+              <div id="kankyou-latlng-parsed" style="margin-top:6px;font-size:11px;color:var(--ok);"></div>
+            </div>
+            <div style="margin-top:8px;font-size:11px;color:var(--hint);">※ OpenStreetMapのデータを使用（無料・登録不要）</div>
           </div>
 
           <!-- 生成中・結果エリア -->
@@ -3763,60 +3782,117 @@ function getTotalLandInfo(){
 
 // OpenStreetMapで住所→緯度経度を取得
 async function geocodeAddress(address){
-  // 住所を正規化（2-28-8 → 2丁目28番8号 など）
+  // 住所を正規化
   const normalized = address
+    .replace(/[ー－―]/g, '-')
     .replace(/(\d+)-(\d+)-(\d+)/, '$1丁目$2番$3号')
-    .replace(/(\d+)-(\d+)/, '$1番$2号');
+    .replace(/(\d+)-(\d+)([^号])/, '$1番$2号$3')
+    .replace(/(\d+)-(\d+)$/, '$1番$2号');
 
-  // 試す検索パターン（順番に試して最初に成功したものを使う）
+  // 試す検索パターン
   const queries = [
     normalized,
     address,
-    // 番地以下を削除して試す
     normalized.replace(/\d+号$/, '').replace(/\d+番$/, ''),
-    // 丁目以下を削除して試す
     normalized.replace(/\d+丁目.*$/, ''),
-    // 市区町村レベルで試す
-    normalized.match(/(.+?[市区町村])/) ? normalized.match(/(.+?[市区町村])/)[1] : null,
   ].filter(Boolean);
 
+  // ① 国土地理院ジオコーディングAPI（日本専用・高精度）
+  for(const q of queries){
+    try{
+      const url = `https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(q)}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if(!res.ok) continue;
+      const data = await res.json();
+      if(data && data.length > 0){
+        const best = data[0];
+        const coords = best.geometry?.coordinates;
+        if(coords){
+          return { lat: coords[1], lon: coords[0], display: best.properties?.title || q, query: q };
+        }
+      }
+    }catch(e){ console.warn('GSI geocode failed:', e.message); }
+  }
+
+  // ② Nominatim（バックアップ）
   for(const q of queries){
     try{
       const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=3&countrycodes=jp&accept-language=ja`;
-      const res = await fetch(url, {headers:{'User-Agent':'fudosan-system/1.0'}});
+      const res = await fetch(url, {
+        headers:{'User-Agent':'fudosan-system/1.0'},
+        signal: AbortSignal.timeout(8000)
+      });
+      if(!res.ok) continue;
       const data = await res.json();
       if(data && data.length > 0){
-        // 最も詳細な結果を選ぶ
-        const best = data.sort((a,b) => (b.importance||0) - (a.importance||0))[0];
+        const best = data.sort((a,b)=>(b.importance||0)-(a.importance||0))[0];
         return { lat: parseFloat(best.lat), lon: parseFloat(best.lon), display: best.display_name, query: q };
       }
-    }catch(e){ continue; }
+    }catch(e){ console.warn('Nominatim failed:', e.message); }
   }
 
-  // 全て失敗した場合
-  throw new Error(`住所が見つかりませんでした。\n入力例：「相模原市南区鵜野森」のように市区町村から入力してください。`);
+  // ③ ClaudeのAIで緯度経度を取得（最終手段・最高精度）
+  const apiKey = localStorage.getItem('fud_api')||'';
+  if(apiKey.startsWith('sk-')){
+    try{
+      const res = await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 100,
+          messages:[{role:'user', content:`以下の日本の住所の緯度・経度を数値のみJSONで返してください（説明不要）。\n住所：${address}\n形式：{"lat":35.1234,"lon":139.5678}`}]
+        })
+      });
+      if(res.ok){
+        const data = await res.json();
+        const text = data.content?.[0]?.text||'';
+        const m = text.match(/\{[^}]*"lat"\s*:\s*([\d.]+)[^}]*"lon"\s*:\s*([\d.]+)[^}]*\}/);
+        if(m){
+          const lat = parseFloat(m[1]), lon = parseFloat(m[2]);
+          if(lat > 20 && lat < 50 && lon > 120 && lon < 155){
+            return { lat, lon, display: address, query: address, source: 'AI' };
+          }
+        }
+      }
+    }catch(e){ console.warn('AI geocode failed:', e.message); }
+  }
+
+  throw new Error(`「${address}」の位置情報を取得できませんでした。\n市区町村レベルで入力してください（例：相模原市南区鵜野森）`);
 }
 
 // Overpass APIで周辺施設を検索
+// Overpass APIのエンドポイント（フォールバック対応）
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
+
 async function searchNearby(lat, lon, amenityTags, radius=800){
   const tagQuery = amenityTags.filter(t=>!t.startsWith('shop:')).map(t => `node["amenity"="${t}"](around:${radius},${lat},${lon});`).join('');
   const shopQuery = amenityTags.filter(t=>t.startsWith('shop:')).map(t=>`node["shop"="${t.replace('shop:','')}"](around:${radius},${lat},${lon});`).join('');
   const railwayQuery = amenityTags.includes('station') ? `node["railway"="station"](around:1200,${lat},${lon});node["railway"="subway_entrance"](around:1200,${lat},${lon});` : '';
-  const query = `[out:json][timeout:25];(${tagQuery}${shopQuery}${railwayQuery});out body;`;
-  try{
-    const res = await fetch('https://overpass-api.de/api/interpreter', {
-      method:'POST', body: 'data=' + encodeURIComponent(query)
-    });
-    if(!res.ok) return [];
-    const text = await res.text();
-    // HTMLが返ってきた場合（エラーページ）は空配列を返す
-    if(text.trim().startsWith('<')) return [];
-    const data = JSON.parse(text);
-    return data.elements || [];
-  }catch(e){
-    console.warn('Overpass API error:', e.message);
-    return [];
+  const query = `[out:json][timeout:20];(${tagQuery}${shopQuery}${railwayQuery});out body;`;
+
+  for(const endpoint of OVERPASS_ENDPOINTS){
+    try{
+      const res = await fetch(endpoint, {
+        method:'POST',
+        body: 'data=' + encodeURIComponent(query),
+        signal: AbortSignal.timeout(15000)
+      });
+      if(!res.ok) continue;
+      const text = await res.text();
+      if(text.trim().startsWith('<')) continue;
+      const data = JSON.parse(text);
+      return data.elements || [];
+    }catch(e){
+      console.warn(`Overpass ${endpoint} failed:`, e.message);
+      continue;
+    }
   }
+  return []; // 全て失敗しても空配列で続行
 }
 
 // 2点間の距離計算（メートル）
@@ -3853,22 +3929,66 @@ function kankyouCard(icon, title, color, content){
   </div>`;
 }
 
+function parseLatLng(input){
+  // 「35.763, 139.397」「35.763 139.397」「35.763,139.397」など全対応
+  const clean = input.trim().replace(/[　\s]+/g, ' ');
+  const m = clean.match(/([\d.]+)[,\s]+([\d.]+)/);
+  if(!m) return null;
+  const lat = parseFloat(m[1]);
+  const lon = parseFloat(m[2]);
+  if(lat > 20 && lat < 50 && lon > 120 && lon < 155) return { lat, lon };
+  return null;
+}
+
+async function generateKankyouReportByLatLng(){
+  const input = document.getElementById('kankyou-latlng').value.trim();
+  const parsed = parseLatLng(input);
+  if(!parsed){
+    document.getElementById('kankyou-latlng-parsed').innerHTML = '<span style="color:red;">❌ 緯度経度を正しく入力してください（例：35.763, 139.397）</span>';
+    return;
+  }
+  document.getElementById('kankyou-latlng-parsed').innerHTML = `✅ 緯度：${parsed.lat}　経度：${parsed.lon}`;
+  // 住所欄にも反映（レポートタイトル用）
+  const addrEl = document.getElementById('kankyou-addr');
+  if(!addrEl.value) addrEl.value = `緯度${parsed.lat}, 経度${parsed.lon}`;
+  // そのままレポート生成
+  await _generateKankyouReportCore(parsed.lat, parsed.lon, addrEl.value);
+}
+
 async function generateKankyouReport(){
   const addr = document.getElementById('kankyou-addr').value.trim();
+  // 住所欄に緯度経度が入力されている場合もここで処理
+  const parsed = parseLatLng(addr);
+  if(parsed){
+    document.getElementById('kankyou-latlng').value = addr;
+    document.getElementById('kankyou-latlng-parsed').innerHTML = `✅ 緯度：${parsed.lat}　経度：${parsed.lon}`;
+    await _generateKankyouReportCore(parsed.lat, parsed.lon, addr);
+    return;
+  }
   if(!addr){ showToast('住所を入力してください', true); return; }
   const btn = document.getElementById('kankyou-btn');
   const resultEl = document.getElementById('kankyou-result');
   btn.disabled = true;
-  resultEl.innerHTML = '<div class="card"><div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);margin-top:8px;">周辺情報を取得中... (30秒ほどかかる場合があります)</div></div></div>';
+  resultEl.innerHTML = '<div class="card"><div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);margin-top:8px;">住所を検索中...</div></div></div>';
+  try{
+    const geo = await geocodeAddress(addr);
+    await _generateKankyouReportCore(geo.lat, geo.lon, addr);
+  }catch(e){
+    resultEl.innerHTML = `<div class="card"><div style="color:#c0392b;font-weight:700;margin-bottom:8px;">⚠️ 住所が見つかりませんでした</div><div style="font-size:12px;color:var(--sub);line-height:1.8;">住所での検索に失敗しました。<br>代わりに <b>Google Mapから緯度経度をコピー</b> して下の欄に貼り付けると確実です。<br><span style="font-size:11px;color:var(--hint);">Google Mapで場所を右クリック →「緯度経度をコピー」→ 貼り付け</span></div></div>`;
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+async function _generateKankyouReportCore(lat, lon, addr){
+  const btn = document.getElementById('kankyou-btn');
+  const btn2 = document.getElementById('kankyou-latlng-btn');
+  const resultEl = document.getElementById('kankyou-result');
+  if(btn) btn.disabled = true;
+  if(btn2) btn2.disabled = true;
+  resultEl.innerHTML = '<div class="card"><div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);margin-top:8px;">周辺施設を検索中... (20〜30秒かかります)</div></div></div>';
 
   try{
-    // 1. ジオコーディング
-    const geo = await geocodeAddress(addr);
-    const {lat, lon} = geo;
-
-    // 2. 各カテゴリの施設を検索
-    resultEl.innerHTML = '<div class="card"><div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);margin-top:8px;">施設データを取得中...</div></div></div>';
-
     const [stations, supermarkets, conveniences, hospitals, schools, parks, govs, others] = await Promise.all([
       searchNearby(lat, lon, ['station'], 1500),
       searchNearby(lat, lon, ['shop:supermarket', 'shop:convenience'], 800),
@@ -3979,14 +4099,20 @@ async function generateKankyouReport(){
     `;
 
     resultEl.innerHTML = reportHtml;
-
-    // 作業履歴を保存
     saveWorkHistory('kankyou', `周辺環境レポート：${addr}`, {addr}, addr);
 
   }catch(e){
-    resultEl.innerHTML = `<div class="card danger-box">❌ エラー：${e.message}<br><small>住所を詳しく入力してみてください（例：東京都○○区○○丁目○番○号）</small></div>`;
+    resultEl.innerHTML = `<div class="card">
+      <div style="color:#c0392b;font-weight:700;margin-bottom:8px;">⚠️ エラー：${e.message}</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.8;">
+        周辺施設データの取得に失敗しました。<br>
+        Google Mapから緯度経度をコピーして入力してください。<br>
+        <span style="font-size:11px;color:var(--hint);">例：35.76314313385761, 139.39795177484962</span>
+      </div>
+    </div>`;
   }finally{
-    btn.disabled = false;
+    if(btn) btn.disabled = false;
+    if(btn2) btn2.disabled = false;
   }
 }
 
