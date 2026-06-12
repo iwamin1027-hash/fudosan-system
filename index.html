@@ -1922,10 +1922,17 @@ function renderRegResults(results,date){
   document.getElementById('reg-result').innerHTML=`
     <div class="result-hdr"><h2>登記簿謄本 一括解析結果</h2><p>解析日時：${date}　${results.length}件処理</p></div>
     ${summaryHtml}
-    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
       <button class="obtn" onclick="copyRegToJutaku()">📋 重要事項に引用</button>
       <button class="obtn" onclick="openRegEditModal()">✏️ 手動修正</button>
-      <button class="pbtn" style="width:auto;padding:6px 14px;font-size:12px;" onclick="applyRegToTemplate()">📝 テンプレート入力に反映</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <select id="reg-apply-mode" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--r);outline:none;">
+          <option value="all">🔄 土地＋建物 両方反映</option>
+          <option value="land">🌍 土地情報のみ反映</option>
+          <option value="building">🏢 建物情報のみ反映</option>
+        </select>
+        <button class="pbtn" style="width:auto;padding:6px 14px;font-size:12px;" onclick="applyRegToTemplate()">📝 テンプレート入力に反映</button>
+      </div>
     </div>
     ${cardsHtml}`;
 }
@@ -2619,7 +2626,19 @@ ${data.takkenshi_name?`説明をする宅地建物取引士: ${data.takkenshi_na
 
 【土地情報】
 ${lands.length>0?lands.map((l,i)=>(i+1)+'筆目: '+l.address+' '+l.chiban+'番 '+l.chime+' '+l.chiseki+'㎡').join('\n'):'未入力'}
-${(()=>{const info=getTotalLandInfo();return info.count>1?`合計筆数: ${info.count}筆\n合計地積: ${info.totalArea}㎡\n（※複数筆のため、Excelの敷地権の目的となる土地の合計筆数・合計地積欄に反映してください）`:''})()}
+${(()=>{
+  const info=getTotalLandInfo();
+  if(!info.count) return '';
+  let txt = `合計筆数: ${info.count}筆\n合計地積: ${info.totalArea}㎡\n`;
+  txt += `\n【ExcelへのExcel入力指示（敷地権の目的たる土地）】\n`;
+  txt += `以下のセルに入力してください（保護セルはスキップ）：\n`;
+  info.lands.forEach((l,i)=>{
+    const row = 233 + (i*2);
+    txt += `${i+1}筆目（行${row}）: 所在→D${row}「${l.addr}」, 地番→R${row}「${l.chiban}」, 地目→Z${row}「${l.chime}」, 地積→AF${row}「${l.chiseki}」㎡, 敷地権種類→AL${row}「所有権」\n`;
+  });
+  if(info.count > 1) txt += `合計筆数→L243「${info.count}」, 合計地積→R243「${info.totalArea}」\n`;
+  return txt;
+})()
 
 【都市計画情報】
 用途地域: ${data.yoto||'未入力'}
@@ -2658,9 +2677,17 @@ ${(()=>{const info=getTotalLandInfo();return info.count>1?`合計筆数: ${info.
     msg += `\n\n【説明をする宅地建物取引士（Excelへの入力指示）】\n氏名: ${data.takkenshi_name}\n登録番号（数字のみ）: ${data.takkenshi_no}\n登録都道府県: ${data.takkenshi_ken||'東京'}\nExcelシート「重要事項説明書」の以下のセルに入力してください：\n・登録番号 → セルH33（H33:O34マージ先頭）に登録番号数字のみ、R33にも同じ番号\n・氏名 → セルH35（H35:V36マージ先頭）に氏名、AF35にも同じ氏名`;
   }
 
-  // 抵当権の指示を追加
+// 抵当権の指示を追加（具体的なセル番号付き）
   const mortgageInstruction = getMortgageInstruction();
-  if(mortgageInstruction) msg += mortgageInstruction;
+  if(mortgageInstruction){
+    msg += mortgageInstruction;
+    msg += `\n\n【抵当権のExcel入力指示（保護セルはスキップ）】
+・区分所有建物の乙区「有」チェック → D298に「■」
+・建物乙区の内容 → L298（L298:AW299マージ先頭）に抵当権の内容を転記
+・土地の乙区「有」チェック → D318に「■」
+・土地乙区の内容 → L318（L318:AW319マージ先頭）に抵当権の内容を転記
+（複数の抵当権がある場合は改行して全て記載してください）`;
+  }
 
   // 建物情報があれば追加
   const bd = data.building||{};
@@ -3691,11 +3718,38 @@ function getTotalLandInfo(){
 
 // OpenStreetMapで住所→緯度経度を取得
 async function geocodeAddress(address){
-  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=jp`;
-  const res = await fetch(url, {headers:{'Accept-Language':'ja','User-Agent':'fudosan-system/1.0'}});
-  const data = await res.json();
-  if(!data.length) throw new Error('住所が見つかりませんでした：' + address);
-  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), display: data[0].display_name };
+  // 住所を正規化（2-28-8 → 2丁目28番8号 など）
+  const normalized = address
+    .replace(/(\d+)-(\d+)-(\d+)/, '$1丁目$2番$3号')
+    .replace(/(\d+)-(\d+)/, '$1番$2号');
+
+  // 試す検索パターン（順番に試して最初に成功したものを使う）
+  const queries = [
+    normalized,
+    address,
+    // 番地以下を削除して試す
+    normalized.replace(/\d+号$/, '').replace(/\d+番$/, ''),
+    // 丁目以下を削除して試す
+    normalized.replace(/\d+丁目.*$/, ''),
+    // 市区町村レベルで試す
+    normalized.match(/(.+?[市区町村])/) ? normalized.match(/(.+?[市区町村])/)[1] : null,
+  ].filter(Boolean);
+
+  for(const q of queries){
+    try{
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=3&countrycodes=jp&accept-language=ja`;
+      const res = await fetch(url, {headers:{'User-Agent':'fudosan-system/1.0'}});
+      const data = await res.json();
+      if(data && data.length > 0){
+        // 最も詳細な結果を選ぶ
+        const best = data.sort((a,b) => (b.importance||0) - (a.importance||0))[0];
+        return { lat: parseFloat(best.lat), lon: parseFloat(best.lon), display: best.display_name, query: q };
+      }
+    }catch(e){ continue; }
+  }
+
+  // 全て失敗した場合
+  throw new Error(`住所が見つかりませんでした。\n入力例：「相模原市南区鵜野森」のように市区町村から入力してください。`);
 }
 
 // Overpass APIで周辺施設を検索
@@ -4452,18 +4506,25 @@ function applyRegToTemplate(){
   const first = ok[0].data;
   const sv=(id,val)=>{const el=document.getElementById(id);if(el&&val)el.value=String(val);};
 
-  // 売主・所有者
-  if(first.owner&&first.owner.length){
+  // 反映モードを取得
+  const mode = document.getElementById('reg-apply-mode')?.value || 'all';
+  const applyLand     = mode === 'all' || mode === 'land';
+  const applyBuilding = mode === 'all' || mode === 'building';
+
+  // 売主・所有者（両方モードのみ）
+  if(applyLand && first.owner&&first.owner.length){
     sv('tpl-seller',       first.owner.map(o=>o.name).join('・'));
     sv('tpl-seller-addr',  first.owner[0].address||'');
     sv('tpl-owner-name',   first.owner.map(o=>(o.share?o.share+' ':'')+o.name).join('・'));
   }
-  // 土地
-  document.getElementById('tpl-lands-wrap').innerHTML='';
-  tplLandCount=0;
-  ok.forEach(r=>{
-    const d=r.data;
-    if((d.land_address||d.land_chiban)&&tplLandCount<10){
+
+  // 土地（土地モード or 両方モード）
+  if(applyLand){
+    document.getElementById('tpl-lands-wrap').innerHTML='';
+    tplLandCount=0;
+    ok.forEach(r=>{
+      const d=r.data;
+      if((d.land_address||d.land_chiban)&&tplLandCount<10){
       addTplLandRow();
       const idx=tplLandCount-1;
       const g=id=>document.getElementById(id);
@@ -4500,23 +4561,25 @@ function applyRegToTemplate(){
   });
   updateMortgageSection(allMortgages);
 
-  // 建物情報（区分所有）
-  sv('tpl-itto-address',  first.building_itto_address);
-  sv('tpl-itto-kozo',     first.building_itto_kozo);
-  sv('tpl-nobeyuka',      first.building_nobeyuka);
-  sv('tpl-kaoku-no',      first.building_number);
-  sv('tpl-tatemono-name', first.building_name);
-  sv('tpl-shurui',        first.building_type);
-  sv('tpl-senyu-kozo',    first.building_kozo);
-  sv('tpl-kai',           first.building_kai);
-  sv('tpl-yuka-touki',    first.building_yuka_touki);
-  sv('tpl-yuka-hekishin', first.building_yuka_hekishin);
-  sv('tpl-year',          first.building_year);
-  sv('tpl-month',         first.building_month);
-  sv('tpl-day',           first.building_day);
-  if(first.building_gengo){
-    const sel=document.getElementById('tpl-gengo');
-    if(sel)[...sel.options].forEach(o=>{if(o.value===first.building_gengo)sel.value=o.value;});
+  // 建物情報（区分所有）- 建物モードまたは両方モードのみ
+  if(applyBuilding){
+    sv('tpl-itto-address',  first.building_itto_address);
+    sv('tpl-itto-kozo',     first.building_itto_kozo);
+    sv('tpl-nobeyuka',      first.building_nobeyuka);
+    sv('tpl-kaoku-no',      first.building_number);
+    sv('tpl-tatemono-name', first.building_name);
+    sv('tpl-shurui',        first.building_type);
+    sv('tpl-senyu-kozo',    first.building_kozo);
+    sv('tpl-kai',           first.building_kai);
+    sv('tpl-yuka-touki',    first.building_yuka_touki);
+    sv('tpl-yuka-hekishin', first.building_yuka_hekishin);
+    sv('tpl-year',          first.building_year);
+    sv('tpl-month',         first.building_month);
+    sv('tpl-day',           first.building_day);
+    if(first.building_gengo){
+      const sel=document.getElementById('tpl-gengo');
+      if(sel)[...sel.options].forEach(o=>{if(o.value===first.building_gengo)sel.value=o.value;});
+    }
   }
 
   // 建物データをローカルに保持
