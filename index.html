@@ -2626,19 +2626,7 @@ ${data.takkenshi_name?`説明をする宅地建物取引士: ${data.takkenshi_na
 
 【土地情報】
 ${lands.length>0?lands.map((l,i)=>(i+1)+'筆目: '+l.address+' '+l.chiban+'番 '+l.chime+' '+l.chiseki+'㎡').join('\n'):'未入力'}
-${(()=>{
-  const info=getTotalLandInfo();
-  if(!info.count) return '';
-  let txt = `合計筆数: ${info.count}筆\n合計地積: ${info.totalArea}㎡\n`;
-  txt += `\n【ExcelへのExcel入力指示（敷地権の目的たる土地）】\n`;
-  txt += `以下のセルに入力してください（保護セルはスキップ）：\n`;
-  info.lands.forEach((l,i)=>{
-    const row = 233 + (i*2);
-    txt += `${i+1}筆目（行${row}）: 所在→D${row}「${l.addr}」, 地番→R${row}「${l.chiban}」, 地目→Z${row}「${l.chime}」, 地積→AF${row}「${l.chiseki}」㎡, 敷地権種類→AL${row}「所有権」\n`;
-  });
-  if(info.count > 1) txt += `合計筆数→L243「${info.count}」, 合計地積→R243「${info.totalArea}」\n`;
-  return txt;
-})()
+${(()=>{ const info=getTotalLandInfo(); if(!info.count) return ''; let txt='合計筆数: '+info.count+'筆\n合計地積: '+info.totalArea+'㎡\n'; if(info.count>1) txt+='\n【土地合計】合計筆数→L243「'+info.count+'」, 合計地積→R243「'+info.totalArea+'」\n'; return txt; })()}
 
 【都市計画情報】
 用途地域: ${data.yoto||'未入力'}
