@@ -593,44 +593,43 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
             <!-- AIチャット -->
       <!-- 周辺環境レポートページ -->
       <div class="page" id="page-kankyou">
-        <div style="max-width:900px;">
+        <div style="max-width:960px;">
           <h2 style="font-size:17px;font-weight:700;margin-bottom:4px;">🗺 周辺環境レポート</h2>
-          <p style="font-size:12px;color:var(--sub);margin-bottom:16px;">住所を入力すると周辺施設・交通・環境情報を自動取得してレポートを作成します</p>
+          <p style="font-size:12px;color:var(--sub);margin-bottom:16px;">住所または Google Map の緯度経度を入力してレポートを作成します</p>
 
-          <!-- 住所入力 -->
-          <div class="card" style="margin-bottom:14px;">
-            <div class="card-title">📍 対象地点を入力</div>
-
-            <!-- 住所入力 -->
-            <div style="margin-bottom:10px;">
-              <div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:4px;">① 住所から検索</div>
-              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                <input type="text" id="kankyou-addr" placeholder="例：神奈川県相模原市南区鵜野森" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;outline:none;"/>
-                <button class="pbtn" id="kankyou-btn" onclick="generateKankyouReport()" style="white-space:nowrap;">🔍 レポート生成</button>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+            <!-- 入力 -->
+            <div class="card" style="margin:0;">
+              <div class="card-title">📍 対象地点</div>
+              <div style="margin-bottom:10px;">
+                <div style="font-size:11px;font-weight:600;color:var(--sub);margin-bottom:4px;">① 住所から検索</div>
+                <input type="text" id="kankyou-addr" placeholder="例：相模原市南区鵜野森" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;outline:none;margin-bottom:6px;"/>
+                <button class="pbtn" id="kankyou-btn" onclick="generateKankyouReport()" style="font-size:13px;">🔍 レポート生成</button>
+              </div>
+              <div style="background:var(--alight);border:1px solid var(--amid);border-radius:var(--r);padding:10px;">
+                <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px;">② Google Mapから緯度経度を貼り付け（推奨）</div>
+                <input type="text" id="kankyou-latlng" placeholder="35.76314, 139.39795" style="width:100%;padding:8px 10px;border:1px solid var(--amid);border-radius:var(--r);font-size:13px;outline:none;font-family:monospace;margin-bottom:6px;"/>
+                <button class="pbtn" id="kankyou-latlng-btn" onclick="generateKankyouReportByLatLng()" style="font-size:13px;">📍 この位置でレポート生成</button>
+                <div id="kankyou-latlng-parsed" style="margin-top:5px;font-size:11px;color:var(--ok);"></div>
               </div>
             </div>
 
-            <!-- 緯度経度入力 -->
-            <div style="background:var(--alight);border:1px solid var(--amid);border-radius:var(--r);padding:12px;">
-              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:8px;">② Google Mapから緯度経度を貼り付け（より正確）</div>
-              <div style="font-size:11px;color:var(--sub);margin-bottom:8px;line-height:1.7;">
-                Google Mapで場所を右クリック →「緯度経度をコピー」→ 下の欄に貼り付け<br>
-                <span style="font-size:10px;color:var(--hint);">例：35.5512, 139.3456　または　35.5512　と　139.3456　を別々に</span>
+            <!-- 履歴 -->
+            <div class="card" style="margin:0;">
+              <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+                📋 レポート履歴
+                <button onclick="clearKankyouHistory()" style="font-size:10px;padding:2px 8px;border:1px solid var(--border2);border-radius:99px;background:none;color:var(--hint);cursor:pointer;">全クリア</button>
               </div>
-              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                <input type="text" id="kankyou-latlng" placeholder="35.5512, 139.3456 または 35.5512139.3456" style="flex:1;min-width:220px;padding:8px 12px;border:1px solid var(--amid);border-radius:var(--r);font-size:13px;outline:none;font-family:monospace;"/>
-                <button class="pbtn" id="kankyou-latlng-btn" onclick="generateKankyouReportByLatLng()" style="white-space:nowrap;background:var(--accent);">📍 この位置でレポート生成</button>
+              <div id="kankyou-history-list" style="max-height:220px;overflow-y:auto;">
+                <div class="empty">履歴はありません</div>
               </div>
-              <div id="kankyou-latlng-parsed" style="margin-top:6px;font-size:11px;color:var(--ok);"></div>
             </div>
-            <div style="margin-top:8px;font-size:11px;color:var(--hint);">※ OpenStreetMapのデータを使用（無料・登録不要）</div>
           </div>
 
-          <!-- 生成中・結果エリア -->
+          <!-- レポート表示エリア -->
           <div id="kankyou-result"></div>
         </div>
       </div>
-
 
       <div class="page" id="page-chat">
         <div style="max-width:760px;display:flex;flex-direction:column;height:calc(100vh - 180px);">
@@ -3277,6 +3276,118 @@ function applyTakkenshi(){
 // ══ 調査報告書履歴表示 ══════════════════════════════
 // ══ 担当者名・ダッシュボード ══════════════════════════════
 
+// ══ 売主・所有者 複数管理 ══════════════════════════════
+let sellerCount = 0;
+let ownerCount  = 0;
+
+function initSellerOwnerRows(){
+  sellerCount = 0; ownerCount = 0;
+  const sw = document.getElementById('tpl-sellers-wrap');
+  const ow = document.getElementById('tpl-owners-wrap');
+  if(sw) sw.innerHTML = '';
+  if(ow) ow.innerHTML = '';
+  addSellerRow();
+  addOwnerRow();
+}
+
+function addSellerRow(name='', address=''){
+  const i = sellerCount;
+  const wrap = document.getElementById('tpl-sellers-wrap');
+  if(!wrap) return;
+  const div = document.createElement('div');
+  div.id = `tpl-seller-row-${i}`;
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;margin-bottom:4px;';
+  div.innerHTML = `<div class="fi"><input type="text" id="tpl-seller-${i}" placeholder="田中 花子" value="${name.replace(/"/g,'&quot;')}" style="width:100%;"/></div><div class="fi"><input type="text" id="tpl-seller-addr-${i}" placeholder="住所" value="${address.replace(/"/g,'&quot;')}" style="width:100%;"/></div><button onclick="removeSellerRow(${i})" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:18px;padding:0 4px;">×</button>`;
+  wrap.appendChild(div);
+  sellerCount++;
+}
+
+function removeSellerRow(i){
+  const el = document.getElementById(`tpl-seller-row-${i}`);
+  if(el) el.remove();
+}
+
+function addOwnerRow(name='', share=''){
+  const i = ownerCount;
+  const wrap = document.getElementById('tpl-owners-wrap');
+  if(!wrap) return;
+  const div = document.createElement('div');
+  div.id = `tpl-owner-row-${i}`;
+  div.style.cssText = 'display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;margin-bottom:4px;';
+  div.innerHTML = `<div class="fi"><input type="text" id="tpl-owner-${i}" placeholder="田中 花子" value="${name.replace(/"/g,'&quot;')}" style="width:100%;"/></div><div class="fi"><input type="text" id="tpl-owner-share-${i}" placeholder="持分" value="${share.replace(/"/g,'&quot;')}" style="width:90px;"/></div><button onclick="removeOwnerRow(${i})" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:18px;padding:0 4px;">×</button>`;
+  wrap.appendChild(div);
+  ownerCount++;
+}
+
+function removeOwnerRow(i){
+  const el = document.getElementById(`tpl-owner-row-${i}`);
+  if(el) el.remove();
+}
+
+function getSellers(){
+  const sellers = [];
+  for(let i=0;i<sellerCount;i++){
+    const n = document.getElementById(`tpl-seller-${i}`);
+    const a = document.getElementById(`tpl-seller-addr-${i}`);
+    if(n && n.value.trim()) sellers.push({name:n.value.trim(), address:a?.value.trim()||''});
+  }
+  return sellers;
+}
+
+function getOwners(){
+  const owners = [];
+  for(let i=0;i<ownerCount;i++){
+    const n = document.getElementById(`tpl-owner-${i}`);
+    const s = document.getElementById(`tpl-owner-share-${i}`);
+    if(n && n.value.trim()) owners.push({name:n.value.trim(), share:s?.value.trim()||''});
+  }
+  return owners;
+}
+
+// ══ 所有者選択ピッカー ══════════════════════════════
+let _ownerPickerTarget = '';
+
+function openOwnerPicker(target){
+  _ownerPickerTarget = target;
+  document.getElementById('owner-picker-title').textContent = target==='seller' ? '売主を謄本の所有者から追加' : '所有者を謄本から追加';
+  const listEl = document.getElementById('owner-picker-list');
+  const ownerMap = new Map();
+  let hist = [];
+  try{ hist = JSON.parse(localStorage.getItem('fud_rhist')||'[]'); }catch(e){}
+  hist.forEach(h=>(h.results||[]).filter(r=>r.ok).forEach(r=>{
+    const d=r.data;
+    [...(d.owner||[]),...(d.building?.owner||[])].forEach(o=>{
+      if(o.name) ownerMap.set(o.name+(o.address||''), {name:o.name,address:o.address||'',share:o.share||'',file:r.file||'',date:h.date||''});
+    });
+  }));
+  regResults.filter(r=>r.ok).forEach(r=>{
+    const d=r.data;
+    [...(d.owner||[]),...(d.building?.owner||[])].forEach(o=>{
+      if(o.name) ownerMap.set(o.name+(o.address||''), {name:o.name,address:o.address||'',share:o.share||'',file:r.file||'',date:'現在'});
+    });
+  });
+  if(!ownerMap.size){
+    listEl.innerHTML='<div class="empty">登記簿解析の履歴がありません</div>';
+  } else {
+    listEl.innerHTML=[...ownerMap.values()].map(o=>`
+      <div class="hist-item" onclick="applyOwnerFromPicker('${o.name.replace(/'/g,"\'")}','${o.address.replace(/'/g,"\'")}','${o.share.replace(/'/g,"\'")}')">
+        <div class="hist-main">
+          <div class="hist-addr">${o.name}${o.share?' ('+o.share+')':''}</div>
+          <div class="hist-sub">${o.address||'住所不明'} / ${o.file} ${o.date}</div>
+        </div>
+        <button class="obtn" style="font-size:11px;padding:3px 10px;flex-shrink:0;">追加</button>
+      </div>`).join('');
+  }
+  document.getElementById('owner-picker-modal').classList.add('open');
+}
+
+function applyOwnerFromPicker(name, address, share){
+  if(_ownerPickerTarget==='seller') addSellerRow(name, address);
+  else addOwnerRow(name, share);
+  showToast((_ownerPickerTarget==='seller'?'売主':'所有者')+'を追加しました：'+name);
+  closeModal('owner-picker-modal');
+}
+
 // ══ テンプレート入力 全クリア ══════════════════════════════
 function clearAllTplFields(){
   if(!confirm('テンプレート入力欄の内容を全てクリアしますか？')) return;
@@ -3358,536 +3469,374 @@ function getTotalLandInfo(){
 
 // ══ 周辺環境レポート ══════════════════════════════════════
 
-// OpenStreetMapで住所→緯度経度を取得
-async function geocodeAddress(address){
-  // 住所を正規化
-  const normalized = address
-    .replace(/[ー－―]/g, '-')
-    .replace(/(\d+)-(\d+)-(\d+)/, '$1丁目$2番$3号')
-    .replace(/(\d+)-(\d+)([^号])/, '$1番$2号$3')
-    .replace(/(\d+)-(\d+)$/, '$1番$2号');
-
-  // 試す検索パターン
-  const queries = [
-    normalized,
-    address,
-    normalized.replace(/\d+号$/, '').replace(/\d+番$/, ''),
-    normalized.replace(/\d+丁目.*$/, ''),
-  ].filter(Boolean);
-
-  // ① 国土地理院ジオコーディングAPI（日本専用・高精度）
-  for(const q of queries){
-    try{
-      const url = `https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(q)}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-      if(!res.ok) continue;
-      const data = await res.json();
-      if(data && data.length > 0){
-        const best = data[0];
-        const coords = best.geometry?.coordinates;
-        if(coords){
-          return { lat: coords[1], lon: coords[0], display: best.properties?.title || q, query: q };
-        }
-      }
-    }catch(e){ console.warn('GSI geocode failed:', e.message); }
-  }
-
-  // ② Nominatim（バックアップ）
-  for(const q of queries){
-    try{
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=3&countrycodes=jp&accept-language=ja`;
-      const res = await fetch(url, {
-        headers:{'User-Agent':'fudosan-system/1.0'},
-        signal: AbortSignal.timeout(8000)
-      });
-      if(!res.ok) continue;
-      const data = await res.json();
-      if(data && data.length > 0){
-        const best = data.sort((a,b)=>(b.importance||0)-(a.importance||0))[0];
-        return { lat: parseFloat(best.lat), lon: parseFloat(best.lon), display: best.display_name, query: q };
-      }
-    }catch(e){ console.warn('Nominatim failed:', e.message); }
-  }
-
-  // ③ ClaudeのAIで緯度経度を取得（最終手段・最高精度）
-  const apiKey = localStorage.getItem('fud_api')||'';
-  if(apiKey.startsWith('sk-')){
-    try{
-      const res = await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5',
-          max_tokens: 100,
-          messages:[{role:'user', content:`以下の日本の住所の緯度・経度を数値のみJSONで返してください（説明不要）。\n住所：${address}\n形式：{"lat":35.1234,"lon":139.5678}`}]
-        })
-      });
-      if(res.ok){
-        const data = await res.json();
-        const text = data.content?.[0]?.text||'';
-        const m = text.match(/\{[^}]*"lat"\s*:\s*([\d.]+)[^}]*"lon"\s*:\s*([\d.]+)[^}]*\}/);
-        if(m){
-          const lat = parseFloat(m[1]), lon = parseFloat(m[2]);
-          if(lat > 20 && lat < 50 && lon > 120 && lon < 155){
-            return { lat, lon, display: address, query: address, source: 'AI' };
-          }
-        }
-      }
-    }catch(e){ console.warn('AI geocode failed:', e.message); }
-  }
-
-  throw new Error(`「${address}」の位置情報を取得できませんでした。\n市区町村レベルで入力してください（例：相模原市南区鵜野森）`);
-}
-
-// Overpass APIで周辺施設を検索
-// Overpass APIのエンドポイント（フォールバック対応）
+// Overpass APIエンドポイント（複数フォールバック）
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
 ];
 
-async function searchNearby(lat, lon, amenityTags, radius=800){
-  const tagQuery = amenityTags.filter(t=>!t.startsWith('shop:')).map(t => `node["amenity"="${t}"](around:${radius},${lat},${lon});`).join('');
-  const shopQuery = amenityTags.filter(t=>t.startsWith('shop:')).map(t=>`node["shop"="${t.replace('shop:','')}"](around:${radius},${lat},${lon});`).join('');
-  const railwayQuery = amenityTags.includes('station') ? `node["railway"="station"](around:1200,${lat},${lon});node["railway"="subway_entrance"](around:1200,${lat},${lon});` : '';
-  const query = `[out:json][timeout:20];(${tagQuery}${shopQuery}${railwayQuery});out body;`;
-
-  for(const endpoint of OVERPASS_ENDPOINTS){
+// 住所→緯度経度（国土地理院→Nominatim→AI）
+async function geocodeAddress(addr){
+  const norm = addr.replace(/[ー－―]/g,'-').replace(/(\d+)-(\d+)-(\d+)/,'$1丁目$2番$3号').replace(/(\d+)-(\d+)$/,'$1番$2号');
+  const qs = [norm, addr, norm.replace(/\d+号$/,'').replace(/\d+番$/,''), norm.replace(/\d+丁目.*$/,'')].filter(Boolean);
+  // ① 国土地理院
+  for(const q of qs){
     try{
-      const res = await fetch(endpoint, {
-        method:'POST',
-        body: 'data=' + encodeURIComponent(query),
-        signal: AbortSignal.timeout(15000)
-      });
-      if(!res.ok) continue;
-      const text = await res.text();
-      if(text.trim().startsWith('<')) continue;
-      const data = JSON.parse(text);
-      return data.elements || [];
-    }catch(e){
-      console.warn(`Overpass ${endpoint} failed:`, e.message);
-      continue;
-    }
+      const r = await fetch(`https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(q)}`,{signal:AbortSignal.timeout(8000)});
+      const d = await r.json();
+      if(d?.length){const c=d[0].geometry?.coordinates;if(c)return{lat:c[1],lon:c[0]};}
+    }catch(e){}
   }
-  return []; // 全て失敗しても空配列で続行
+  // ② Nominatim
+  for(const q of qs){
+    try{
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=3&countrycodes=jp`,{headers:{'User-Agent':'fudosan-system/1.0'},signal:AbortSignal.timeout(8000)});
+      const d = await r.json();
+      if(d?.length)return{lat:parseFloat(d[0].lat),lon:parseFloat(d[0].lon)};
+    }catch(e){}
+  }
+  // ③ Claude AI
+  const apiKey = localStorage.getItem('fud_api')||'';
+  if(apiKey.startsWith('sk-')){
+    try{
+      const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:80,messages:[{role:'user',content:`住所「${addr}」の緯度経度をJSON {"lat":0.0,"lon":0.0} のみで返してください`}]})});
+      const d = await r.json();
+      const m = (d.content?.[0]?.text||'').match(/"lat"\s*:\s*([\d.]+).*?"lon"\s*:\s*([\d.]+)/s);
+      if(m){const lat=parseFloat(m[1]),lon=parseFloat(m[2]);if(lat>20&&lat<50&&lon>120&&lon<155)return{lat,lon};}
+    }catch(e){}
+  }
+  throw new Error('位置情報を取得できませんでした。緯度経度を直接入力してください。');
 }
 
-// 2点間の距離計算（メートル）
-function calcDist(lat1, lon1, lat2, lon2){
-  const R = 6371000;
-  const dLat = (lat2-lat1)*Math.PI/180;
-  const dLon = (lon2-lon1)*Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+// 緯度経度パース
+function parseLatLng(s){
+  const m=s.trim().match(/([\d.]+)[,\s]+([\d.]+)/);
+  if(!m)return null;
+  const lat=parseFloat(m[1]),lon=parseFloat(m[2]);
+  return(lat>20&&lat<50&&lon>120&&lon<155)?{lat,lon}:null;
 }
 
-// 徒歩時間（分）
-function walkMin(meters){ return Math.ceil(meters / 80); }
-
-// 施設リストのHTML生成
-function renderFacilityList(items, max=5){
-  if(!items.length) return '<div style="color:var(--hint);font-size:12px;">該当施設なし</div>';
-  return items.slice(0,max).map(item => {
-    const name = item.tags?.name || item.tags?.['name:ja'] || '(名称不明)';
-    const dist = item._dist;
-    const walk = walkMin(dist);
-    return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;">
-      <span>${name}</span>
-      <span style="color:var(--sub);white-space:nowrap;margin-left:8px;">${dist}m（徒歩${walk}分）</span>
-    </div>`;
-  }).join('');
+// Overpass検索
+async function searchNearby(lat,lon,tags,radius=800){
+  const aQ=tags.filter(t=>!t.startsWith('shop:')).map(t=>`node["amenity"="${t}"](around:${radius},${lat},${lon});`).join('');
+  const sQ=tags.filter(t=>t.startsWith('shop:')).map(t=>`node["shop"="${t.replace('shop:','')}"](around:${radius},${lat},${lon});`).join('');
+  const rQ=tags.includes('station')?`node["railway"="station"](around:1500,${lat},${lon});`:'';
+  const query=`[out:json][timeout:20];(${aQ}${sQ}${rQ});out body;`;
+  for(const ep of OVERPASS_ENDPOINTS){
+    try{
+      const r=await fetch(ep,{method:'POST',body:'data='+encodeURIComponent(query),signal:AbortSignal.timeout(18000)});
+      if(!r.ok)continue;
+      const t=await r.text();
+      if(t.trim().startsWith('<'))continue;
+      return JSON.parse(t).elements||[];
+    }catch(e){continue;}
+  }
+  return [];
 }
 
-// セクションカードHTML
-function kankyouCard(icon, title, color, content){
-  return `<div class="card" style="margin-bottom:12px;">
-    <div style="font-size:13px;font-weight:700;color:${color};margin-bottom:10px;">${icon} ${title}</div>
-    ${content}
-  </div>`;
+function calcDist(lat1,lon1,lat2,lon2){
+  const R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
 }
 
-function parseLatLng(input){
-  // 「35.763, 139.397」「35.763 139.397」「35.763,139.397」など全対応
-  const clean = input.trim().replace(/[　\s]+/g, ' ');
-  const m = clean.match(/([\d.]+)[,\s]+([\d.]+)/);
-  if(!m) return null;
-  const lat = parseFloat(m[1]);
-  const lon = parseFloat(m[2]);
-  if(lat > 20 && lat < 50 && lon > 120 && lon < 155) return { lat, lon };
-  return null;
-}
-
+// ── メイン生成 ──────────────────────────────────────────
 async function generateKankyouReportByLatLng(){
-  const input = document.getElementById('kankyou-latlng').value.trim();
-  const parsed = parseLatLng(input);
-  if(!parsed){
-    document.getElementById('kankyou-latlng-parsed').innerHTML = '<span style="color:red;">❌ 緯度経度を正しく入力してください（例：35.763, 139.397）</span>';
-    return;
-  }
-  document.getElementById('kankyou-latlng-parsed').innerHTML = `✅ 緯度：${parsed.lat}　経度：${parsed.lon}`;
-  // 住所欄にも反映（レポートタイトル用）
-  const addrEl = document.getElementById('kankyou-addr');
-  if(!addrEl.value) addrEl.value = `緯度${parsed.lat}, 経度${parsed.lon}`;
-  // そのままレポート生成
-  await _generateKankyouReportCore(parsed.lat, parsed.lon, addrEl.value);
+  const input=document.getElementById('kankyou-latlng').value.trim();
+  const p=parseLatLng(input);
+  if(!p){document.getElementById('kankyou-latlng-parsed').innerHTML='<span style="color:red;">❌ 形式が違います（例：35.763, 139.397）</span>';return;}
+  document.getElementById('kankyou-latlng-parsed').innerHTML=`✅ 緯度:${p.lat.toFixed(5)} 経度:${p.lon.toFixed(5)}`;
+  const addrEl=document.getElementById('kankyou-addr');
+  if(!addrEl.value) addrEl.value=`${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`;
+  await _doKankyouReport(p.lat,p.lon,addrEl.value);
 }
 
 async function generateKankyouReport(){
-  const addr = document.getElementById('kankyou-addr').value.trim();
-  // 住所欄に緯度経度が入力されている場合もここで処理
-  const parsed = parseLatLng(addr);
-  if(parsed){
-    document.getElementById('kankyou-latlng').value = addr;
-    document.getElementById('kankyou-latlng-parsed').innerHTML = `✅ 緯度：${parsed.lat}　経度：${parsed.lon}`;
-    await _generateKankyouReportCore(parsed.lat, parsed.lon, addr);
-    return;
-  }
-  if(!addr){ showToast('住所を入力してください', true); return; }
-  const btn = document.getElementById('kankyou-btn');
-  const resultEl = document.getElementById('kankyou-result');
-  btn.disabled = true;
-  resultEl.innerHTML = '<div class="card"><div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);margin-top:8px;">住所を検索中...</div></div></div>';
+  const addr=(document.getElementById('kankyou-addr').value||'').trim();
+  const p=parseLatLng(addr);
+  if(p){await _doKankyouReport(p.lat,p.lon,addr);return;}
+  if(!addr){showToast('住所を入力してください',true);return;}
+  const btn=document.getElementById('kankyou-btn');
+  btn.disabled=true;
+  document.getElementById('kankyou-result').innerHTML='<div class="card"><div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);margin-top:8px;">住所を検索中...</div></div></div>';
   try{
-    const geo = await geocodeAddress(addr);
-    await _generateKankyouReportCore(geo.lat, geo.lon, addr);
+    const geo=await geocodeAddress(addr);
+    await _doKankyouReport(geo.lat,geo.lon,addr);
   }catch(e){
-    resultEl.innerHTML = `<div class="card"><div style="color:#c0392b;font-weight:700;margin-bottom:8px;">⚠️ 住所が見つかりませんでした</div><div style="font-size:12px;color:var(--sub);line-height:1.8;">住所での検索に失敗しました。<br>代わりに <b>Google Mapから緯度経度をコピー</b> して下の欄に貼り付けると確実です。<br><span style="font-size:11px;color:var(--hint);">Google Mapで場所を右クリック →「緯度経度をコピー」→ 貼り付け</span></div></div>`;
-  }finally{
-    btn.disabled = false;
-  }
+    document.getElementById('kankyou-result').innerHTML=`<div class="card"><div style="color:#c0392b;font-weight:700;margin-bottom:8px;">⚠️ ${e.message}</div><div style="font-size:12px;color:var(--sub);">Google Mapから緯度経度をコピーして右の欄に貼り付けると確実です。<br>例：35.76314313385761, 139.39795177484962</div></div>`;
+  }finally{btn.disabled=false;}
 }
 
-async function _generateKankyouReportCore(lat, lon, addr){
-  const btn = document.getElementById('kankyou-btn');
-  const btn2 = document.getElementById('kankyou-latlng-btn');
-  const resultEl = document.getElementById('kankyou-result');
-  if(btn) btn.disabled = true;
-  if(btn2) btn2.disabled = true;
-  resultEl.innerHTML = '<div class="card"><div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);margin-top:8px;">周辺施設を検索中... (20〜30秒かかります)</div></div></div>';
+async function _doKankyouReport(lat,lon,addr){
+  const btnA=document.getElementById('kankyou-btn');
+  const btnB=document.getElementById('kankyou-latlng-btn');
+  const resultEl=document.getElementById('kankyou-result');
+  if(btnA)btnA.disabled=true;
+  if(btnB)btnB.disabled=true;
+  resultEl.innerHTML='<div class="card"><div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);margin-top:8px;">周辺施設を検索中... 少々お待ちください</div></div></div>';
 
   try{
-    const [stations, supermarkets, conveniences, hospitals, schools, parks, govs, others] = await Promise.all([
-      searchNearby(lat, lon, ['station'], 1500),
-      searchNearby(lat, lon, ['shop:supermarket', 'shop:convenience'], 800),
-      searchNearby(lat, lon, ['shop:convenience'], 600),
-      searchNearby(lat, lon, ['hospital', 'clinic', 'pharmacy', 'doctors'], 800),
-      searchNearby(lat, lon, ['school', 'kindergarten'], 1000),
-      searchNearby(lat, lon, ['park'], 800),
-      searchNearby(lat, lon, ['townhall', 'post_office', 'police', 'fire_station'], 1500),
-      searchNearby(lat, lon, ['restaurant', 'fast_food', 'cafe', 'bank'], 500),
+    const [stRaw,spRaw,cvRaw,hoRaw,scRaw,pkRaw,gvRaw,fdRaw,bnRaw]=await Promise.all([
+      searchNearby(lat,lon,['station'],1500),
+      searchNearby(lat,lon,['shop:supermarket'],800),
+      searchNearby(lat,lon,['shop:convenience'],600),
+      searchNearby(lat,lon,['hospital','clinic','doctors'],800),
+      searchNearby(lat,lon,['school','kindergarten'],1000),
+      searchNearby(lat,lon,['park'],800),
+      searchNearby(lat,lon,['townhall','post_office','police','fire_station'],1500),
+      searchNearby(lat,lon,['restaurant','fast_food','cafe'],600),
+      searchNearby(lat,lon,['pharmacy','bank'],800),
     ]);
 
-    // 距離を計算してソート
-    const addDist = (items) => items.map(i => ({...i, _dist: calcDist(lat, lon, i.lat, i.lon)})).sort((a,b) => a._dist - b._dist);
+    const ad=(arr)=>arr.map(i=>({...i,_dist:calcDist(lat,lon,i.lat,i.lon)})).filter(i=>i.tags?.name).sort((a,b)=>a._dist-b._dist);
 
-    const stationList   = addDist(stations).filter(i => i.tags?.name);
-    const superList     = addDist(supermarkets).filter(i => !i.tags?.amenity?.includes('convenience') && i.tags?.name);
-    const convList      = addDist(conveniences).filter(i => i.tags?.name);
-    const hospitalList  = addDist(hospitals).filter(i => i.tags?.amenity === 'hospital' || i.tags?.amenity === 'clinic' || i.tags?.amenity === 'doctors').filter(i => i.tags?.name);
-    const pharmacyList  = addDist(hospitals).filter(i => i.tags?.amenity === 'pharmacy').filter(i => i.tags?.name);
-    const schoolList    = addDist(schools).filter(i => i.tags?.name);
-    const parkList      = addDist(parks).filter(i => i.tags?.name);
-    const govList       = addDist(govs).filter(i => i.tags?.name);
-    const restaurantList= addDist(others).filter(i => ['restaurant','fast_food','cafe'].includes(i.tags?.amenity) && i.tags?.name);
-    const bankList      = addDist(others).filter(i => i.tags?.amenity === 'bank' && i.tags?.name);
+    const CATS=[
+      {key:'transport',label:'交通（駅・バス停）', icon:'🚉',color:'#2c3e50',items:ad(stRaw)},
+      {key:'shop',     label:'スーパー・コンビニ', icon:'🛒',color:'#e67e22',items:ad([...spRaw,...cvRaw])},
+      {key:'hospital', label:'病院・医療機関',     icon:'🏥',color:'#e74c3c',items:ad([...hoRaw,...bnRaw.filter(i=>i.tags?.amenity==='pharmacy')])},
+      {key:'school',   label:'学校・教育施設',     icon:'🏫',color:'#8e44ad',items:ad(scRaw)},
+      {key:'park',     label:'公園',               icon:'🌳',color:'#27ae60',items:ad(pkRaw)},
+      {key:'gov',      label:'公共施設',           icon:'🏛',color:'#2980b9',items:ad(gvRaw)},
+      {key:'food',     label:'飲食店・カフェ',     icon:'🍽',color:'#c0392b',items:ad(fdRaw)},
+      {key:'bank',     label:'金融機関',           icon:'🏦',color:'#7f8c8d',items:ad(bnRaw.filter(i=>i.tags?.amenity==='bank'))},
+    ].filter(c=>c.items.length>0);
 
-    // 最寄り駅
-    const nearestStation = stationList[0];
-    const stationSummary = nearestStation
-      ? `最寄り駅：<strong>${nearestStation.tags?.name||''}</strong>（${nearestStation._dist}m・徒歩${walkMin(nearestStation._dist)}分）`
-      : '最寄り駅：データなし';
+    // グローバル保存（印刷・履歴用）
+    window._krLat=lat; window._krLon=lon;
+    window._krAddr=addr; window._krCats=CATS;
 
-    // レポートHTML生成
-    const now = new Date().toLocaleDateString('ja-JP') + ' ' + new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
-    // ── カテゴリ定義 ──
-    const CATEGORIES = [
-      { key:'transport', label:'交通（駅・バス停）', icon:'🚉', color:'#2c3e50', items: stationList },
-      { key:'shop',      label:'スーパー・コンビニ', icon:'🛒', color:'#e67e22', items: [...superList, ...convList] },
-      { key:'hospital',  label:'病院・医療機関',     icon:'🏥', color:'#e74c3c', items: [...hospitalList, ...pharmacyList] },
-      { key:'school',    label:'学校・教育施設',     icon:'🏫', color:'#8e44ad', items: schoolList },
-      { key:'park',      label:'公園',               icon:'🌳', color:'#27ae60', items: parkList },
-      { key:'gov',       label:'公共施設',           icon:'🏛', color:'#2980b9', items: govList },
-      { key:'food',      label:'飲食店・カフェ',     icon:'🍽', color:'#c0392b', items: restaurantList },
-      { key:'bank',      label:'金融機関',           icon:'🏦', color:'#7f8c8d', items: bankList },
-    ].filter(c => c.items.length > 0);
+    const now=new Date().toLocaleDateString('ja-JP')+' '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    window._krNow=now;
 
-    // ── 施設リストHTML（番号付き） ──
-    function facilityListHtml(items, max=8){
-      if(!items.length) return '<div style="color:#aaa;font-size:12px;">該当施設なし</div>';
-      return items.slice(0,max).map((item,i) => {
-        const name = item.tags?.name || '(名称不明)';
-        const walk = Math.ceil(item._dist/80);
-        return `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:12px;align-items:center;">
-          <span style="background:${item._catColor};color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</span>
-          <span style="flex:1;">${name}</span>
-          <span style="color:#888;white-space:nowrap;">${item._dist}m（徒歩${walk}分）</span>
-        </div>`;
-      }).join('');
-    }
+    _renderKankyouResult(CATS,lat,lon,addr,now,resultEl);
 
-    // 各施設にカテゴリカラーを付与
-    CATEGORIES.forEach(cat => {
-      cat.items.forEach(item => { item._catColor = cat.color; item._catLabel = cat.label; });
-    });
-
-    // ── サマリー行 ──
-    const summaryRows = CATEGORIES.map(c => {
-      const first = c.items[0];
-      if(!first) return '';
-      return `<div style="display:flex;gap:6px;align-items:center;padding:4px 0;font-size:12px;">
-        <span style="font-size:15px;">${c.icon}</span>
-        <span style="font-weight:600;color:${c.color};min-width:130px;">${c.label}</span>
-        <span>${first.tags?.name||''}（${first._dist}m・徒歩${Math.ceil(first._dist/80)}分）</span>
-      </div>`;
-    }).join('');
-
-    // ── 地図＋一覧のセクションHTML（Leaflet使用） ──
-    function mapSectionHtml(cat, idx){
-      const mapId = `kankyou-map-${cat.key}`;
-      const markerData = JSON.stringify(cat.items.slice(0,10).map((item,i) => ({
-        lat: item.lat, lon: item.lon, name: item.tags?.name||'(名称不明)', num: i+1, dist: item._dist
-      })));
-      return `
-        <div class="report-page-section" style="page-break-inside:avoid;margin-bottom:0;">
-          <div style="background:${cat.color};color:#fff;padding:10px 16px;border-radius:6px 6px 0 0;display:flex;align-items:center;gap:8px;">
-            <span style="font-size:18px;">${cat.icon}</span>
-            <span style="font-size:15px;font-weight:700;">${cat.label}</span>
-            <span style="font-size:12px;opacity:.8;margin-left:auto;">${cat.items.length}件</span>
-          </div>
-          <!-- 地図 -->
-          <div id="${mapId}" style="height:320px;border:1px solid #ddd;border-top:none;" data-lat="${lat}" data-lon="${lon}" data-markers='${markerData}' data-color="${cat.color}"></div>
-          <!-- 施設一覧 -->
-          <div style="border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;padding:12px;">
-            ${facilityListHtml(cat.items, 10)}
-          </div>
-        </div>`;
-    }
-
-    const sectionsHtml = CATEGORIES.map((cat,i) => mapSectionHtml(cat,i)).join('\n<div style="page-break-after:always;"></div>\n');
-
-    const displayAddr = addr.startsWith('緯度') ? `緯度 ${lat.toFixed(6)}, 経度 ${lon.toFixed(6)}` : addr;
-
-    const reportHtml = `
-      <!-- Leaflet CSS -->
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
-      <!-- タイトル（編集可） -->
-      <div style="background:linear-gradient(135deg,#1a5c3a,#27ae60);color:#fff;padding:20px;border-radius:8px;margin-bottom:16px;" class="no-print-edit">
-        <div style="font-size:18px;font-weight:700;margin-bottom:6px;">周辺環境レポート</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <span style="font-size:13px;opacity:.9;">📍</span>
-          <input id="report-addr-edit" value="${displayAddr.replace(/"/g,'&quot;')}"
-            style="flex:1;font-size:13px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:4px;padding:4px 8px;color:#fff;outline:none;"
-            placeholder="住所または場所名を入力"/>
-        </div>
-        <div style="font-size:11px;opacity:.7;">作成日時：${now}　　<span style="font-size:10px;">✏️ 住所欄は直接編集できます</span></div>
-      </div>
-
-      <!-- サマリー -->
-      <div style="background:#f0fdf4;border:1px solid #9FD4B8;border-radius:8px;padding:14px;margin-bottom:16px;page-break-inside:avoid;">
-        <div style="font-size:13px;font-weight:700;color:#0F5132;margin-bottom:8px;">📋 周辺環境サマリー</div>
-        ${summaryRows}
-      </div>
-
-      <!-- 各カテゴリの地図＋一覧 -->
-      ${sectionsHtml}
-
-      <!-- 注意書き -->
-      <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:10px 14px;margin-top:16px;font-size:11px;color:#7c5800;line-height:1.8;page-break-inside:avoid;">
-        ※ 本レポートはOpenStreetMapのデータを使用しています。情報は必ずしも最新・正確ではない場合があります。<br>
-        ※ 実際の取引にあたっては現地確認および公的機関への確認をお勧めします。<br>
-        データ取得日：${now}
-      </div>
-
-      <!-- 印刷ボタン -->
-      <div style="text-align:center;margin-top:20px;" class="no-print">
-        <button onclick="printKankyouReport()" style="padding:12px 32px;background:#1a3a5c;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨 印刷・PDF保存（A4）</button>
-        <p style="font-size:11px;color:#aaa;margin-top:6px;">印刷ダイアログで「PDFに保存」を選択するとPDFとして保存できます</p>
-      </div>
-    `;
-
-    resultEl.innerHTML = reportHtml;
-
-    // Leaflet JSを読み込んで地図を描画
-    function initKankyouMaps(){
-      if(!window.L){
-        const s = document.createElement('script');
-        s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-        s.onload = () => renderAllMaps();
-        document.head.appendChild(s);
-      } else {
-        renderAllMaps();
-      }
-    }
-
-    function renderAllMaps(){
-      const mapEls = document.querySelectorAll('[id^="kankyou-map-"]');
-      mapEls.forEach((el, idx) => {
-        if(el._leaflet_id) return;
-        const clat = parseFloat(el.dataset.lat);
-        const clon = parseFloat(el.dataset.lon);
-        const markers = JSON.parse(el.dataset.markers||'[]');
-        const color = el.dataset.color;
-
-        // 少し遅延させて確実にDOMサイズが確定してから初期化
-        setTimeout(() => {
-          if(el._leaflet_id) return; // 重複防止
-          const map = L.map(el, { zoomControl:true, scrollWheelZoom:false }).setView([clat,clon], 15);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-            attribution:'© OpenStreetMap', maxZoom:19
-          }).addTo(map);
-
-          // サイズを再計算（最重要）
-          map.invalidateSize();
-
-          // 対象地点マーカー
-          const centerIcon = L.divIcon({
-            html:`<div style="background:#e74c3c;border:3px solid #fff;border-radius:50%;width:16px;height:16px;box-shadow:0 2px 6px rgba(0,0,0,.4);"></div>`,
-            className:'', iconAnchor:[8,8]
-          });
-          L.marker([clat,clon],{icon:centerIcon}).addTo(map).bindPopup('📍 対象地点');
-
-          // 施設マーカー（番号付き）
-          markers.forEach((m,i) => {
-            const icon = L.divIcon({
-              html:`<div style="background:${color};color:#fff;border:2px solid #fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,.3);">${i+1}</div>`,
-              className:'', iconAnchor:[13,13]
-            });
-            L.marker([m.lat,m.lon],{icon}).addTo(map)
-             .bindPopup(`<b>${i+1}. ${m.name}</b><br>${m.dist}m（徒歩${Math.ceil(m.dist/80)}分）`);
-          });
-
-          // 全マーカーが収まるようズーム調整
-          if(markers.length > 0){
-            const bounds = L.latLngBounds([[clat,clon],...markers.map(m=>[m.lat,m.lon])]);
-            map.fitBounds(bounds, {padding:[30,30]});
-          }
-
-          // fitBounds後も再度サイズ確認
-          setTimeout(() => map.invalidateSize(), 300);
-
-        }, idx * 150); // 地図ごとに150ms間隔でずらして初期化
-      });
-    }
-
-    setTimeout(initKankyouMaps, 100);
-    saveWorkHistory('kankyou', `周辺環境レポート：${addr}`, {addr}, addr);
+    // 履歴保存
+    const histItem={title:addr,addr,lat,lon,cats:CATS.map(c=>({...c,items:c.items.slice(0,10)})),date:now,savedAt:Date.now()};
+    let hist=[];try{hist=JSON.parse(localStorage.getItem('fud_kankyou_hist')||'[]');}catch(e){}
+    hist.unshift(histItem);
+    localStorage.setItem('fud_kankyou_hist',JSON.stringify(hist.slice(0,20)));
+    renderKankyouHistory();
+    saveWorkHistory('kankyou',`周辺環境レポート：${addr}`,{addr},addr);
 
   }catch(e){
-    resultEl.innerHTML = `<div class="card">
-      <div style="color:#c0392b;font-weight:700;margin-bottom:8px;">⚠️ エラー：${e.message}</div>
-      <div style="font-size:12px;color:var(--sub);line-height:1.8;">
-        周辺施設データの取得に失敗しました。<br>
-        Google Mapから緯度経度をコピーして入力してください。<br>
-        <span style="font-size:11px;color:var(--hint);">例：35.76314313385761, 139.39795177484962</span>
-      </div>
-    </div>`;
+    resultEl.innerHTML=`<div class="card"><div style="color:#c0392b;font-weight:700;">❌ エラー：${e.message}</div></div>`;
   }finally{
-    if(btn) btn.disabled = false;
-    if(btn2) btn2.disabled = false;
+    if(btnA)btnA.disabled=false;
+    if(btnB)btnB.disabled=false;
   }
 }
 
-// 印刷用
-function printKankyouReport(){
-  const resultEl = document.getElementById('kankyou-result');
-  const addrEl = document.getElementById('report-addr-edit');
-  const displayAddr = addrEl ? addrEl.value : document.getElementById('kankyou-addr').value;
+// ── レポート描画 ──────────────────────────────────────────
+function _renderKankyouResult(CATS,lat,lon,addr,now,resultEl){
+  const displayAddr=addr.match(/^\d+\.\d+/)?`緯度${parseFloat(addr).toFixed(5)}付近`:addr;
 
-  // 地図のスクリーンショット代わりにLeafletの静的タイル画像URLを生成
-  const win = window.open('', '_blank', 'width=900,height=700');
+  // サマリー行
+  const summaryRows=CATS.map(c=>{
+    const f=c.items[0];if(!f)return'';
+    return`<div style="display:flex;gap:6px;align-items:center;padding:3px 0;font-size:12px;"><span style="font-size:14px;">${c.icon}</span><span style="font-weight:600;color:${c.color};min-width:120px;">${c.label}</span><span>${f.tags?.name}（${f._dist}m・徒歩${Math.ceil(f._dist/80)}分）</span></div>`;
+  }).join('');
 
-  // 各カテゴリの地図データを収集
-  const mapSections = [];
-  document.querySelectorAll('[id^="kankyou-map-"]').forEach(el => {
-    const key = el.id.replace('kankyou-map-','');
-    const lat = el.dataset.lat, lon = el.dataset.lon;
-    const markers = JSON.parse(el.dataset.markers||'[]');
-    const color = el.dataset.color;
-    const section = el.closest('.report-page-section');
-    const title = section?.querySelector('span:nth-child(2)')?.textContent||'';
-    const icon  = section?.querySelector('span:first-child')?.textContent||'';
-    const listHtml = section?.querySelector('div:last-child')?.innerHTML||'';
-    mapSections.push({key, lat, lon, markers, color, title, icon, listHtml});
-  });
+  // 施設一覧HTML（番号付き）
+  const listHtml=(items,max=10)=>items.slice(0,max).map((item,i)=>`
+    <div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:12px;align-items:center;">
+      <span style="background:${item._catColor};color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</span>
+      <span style="flex:1;">${item.tags?.name||'(名称不明)'}</span>
+      <span style="color:#888;white-space:nowrap;">${item._dist}m（徒歩${Math.ceil(item._dist/80)}分）</span>
+    </div>`).join('');
 
-  const now = new Date().toLocaleDateString('ja-JP') + ' ' + new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  CATS.forEach(c=>c.items.forEach(item=>{item._catColor=c.color;}));
 
-  const sectionsHtml = mapSections.map((s,idx) => `
-    <div class="page-section" style="page-break-inside:avoid;margin-bottom:0;${idx>0?'page-break-before:always;':''}">
-      <div style="background:${s.color};color:#fff;padding:10px 16px;display:flex;align-items:center;gap:8px;border-radius:6px 6px 0 0;">
-        <span style="font-size:18px;">${s.icon}</span>
-        <span style="font-size:15px;font-weight:700;">${s.title}</span>
-        <span style="font-size:12px;opacity:.8;margin-left:auto;">${s.markers.length}件</span>
+  // セクション（地図＋一覧）
+  const sections=CATS.map(c=>`
+    <div style="margin-bottom:24px;">
+      <div style="background:${c.color};color:#fff;padding:10px 16px;border-radius:6px 6px 0 0;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">${c.icon}</span><span style="font-size:15px;font-weight:700;">${c.label}</span>
+        <span style="opacity:.8;margin-left:auto;font-size:12px;">${c.items.length}件</span>
       </div>
-      <div id="print-map-${s.key}" style="height:380px;border:1px solid #ddd;border-top:none;"
-        data-lat="${s.lat}" data-lon="${s.lon}"
-        data-markers='${JSON.stringify(s.markers).replace(/'/g,"&#39;")}'
-        data-color="${s.color}"></div>
+      <div id="kmap-${c.key}" style="height:280px;border:1px solid #ddd;border-top:none;background:#f0f0f0;"></div>
       <div style="border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;padding:12px;">
-        ${s.listHtml}
+        ${listHtml(c.items,10)}
       </div>
-    </div>`).join('\n');
+    </div>`).join('');
 
-  win.document.write(`<!DOCTYPE html><html lang="ja"><head>
-    <meta charset="UTF-8">
-    <title>周辺環境レポート - ${displayAddr}</title>
+  resultEl.innerHTML=`
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <style>
-      *{box-sizing:border-box;margin:0;padding:0;}
-      body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:12px;color:#1a1a1a;background:#fff;}
-      .report-wrap{max-width:780px;margin:0 auto;padding:16px;}
-      .page-header{background:linear-gradient(135deg,#1a5c3a,#27ae60);color:#fff;padding:16px 20px;border-radius:8px;margin-bottom:14px;}
-      .summary-box{background:#f0fdf4;border:1px solid #9FD4B8;border-radius:8px;padding:14px;margin-bottom:14px;page-break-inside:avoid;}
-      .page-section{margin-bottom:24px;}
-      .note{background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:10px;font-size:11px;color:#7c5800;margin-top:16px;page-break-inside:avoid;}
-      @media print{
-        @page{size:A4;margin:12mm 10mm;}
-        body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-        .page-section{page-break-inside:avoid;}
-      }
-    </style>
-  </head><body>
-  <div class="report-wrap">
-    <div class="page-header">
-      <div style="font-size:18px;font-weight:700;margin-bottom:6px;">周辺環境レポート</div>
-      <div style="font-size:13px;opacity:.9;">📍 ${displayAddr}</div>
-      <div style="font-size:11px;opacity:.7;margin-top:4px;">作成日時：${now}</div>
+    <div style="background:linear-gradient(135deg,#1a5c3a,#27ae60);color:#fff;padding:16px 20px;border-radius:8px;margin-bottom:14px;">
+      <div style="font-size:17px;font-weight:700;margin-bottom:6px;">周辺環境レポート</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span>📍</span>
+        <input id="report-addr-edit" value="${displayAddr.replace(/"/g,'&quot;')}"
+          style="flex:1;font-size:13px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:4px;padding:4px 8px;color:#fff;outline:none;" placeholder="タイトル・住所を編集"/>
+      </div>
+      <div style="font-size:11px;opacity:.7;">作成日時：${now}　✏️ タイトル欄は直接編集できます</div>
     </div>
-    ${sectionsHtml}
-    <div class="note">
-      ※ 本レポートはOpenStreetMapのデータを使用しています。情報は必ずしも最新・正確ではない場合があります。<br>
-      ※ 実際の取引にあたっては現地確認および公的機関への確認をお勧めします。
+    <div style="background:#f0fdf4;border:1px solid #9FD4B8;border-radius:8px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:#0F5132;margin-bottom:8px;">📋 周辺環境サマリー</div>
+      ${summaryRows}
     </div>
-  </div>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
-  <script>
-    window.onload = function(){
-      document.querySelectorAll('[id^="print-map-"]').forEach(function(el){
-        var lat=parseFloat(el.dataset.lat), lon=parseFloat(el.dataset.lon);
-        var markers=JSON.parse(el.dataset.markers||'[]');
-        var color=el.dataset.color;
-        var map=L.map(el,{zoomControl:false,scrollWheelZoom:false,attributionControl:false}).setView([lat,lon],15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
-        var ci=L.divIcon({html:'<div style="background:#e74c3c;border:3px solid #fff;border-radius:50%;width:14px;height:14px;box-shadow:0 2px 4px rgba(0,0,0,.4);"></div>',className:'',iconAnchor:[7,7]});
-        L.marker([lat,lon],{icon:ci}).addTo(map);
-        markers.forEach(function(m,i){
-          var icon=L.divIcon({html:'<div style="background:'+color+';color:#fff;border:2px solid #fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,.3);">'+(i+1)+'</div>',className:'',iconAnchor:[12,12]});
-          L.marker([m.lat,m.lon],{icon:icon}).addTo(map).bindPopup('<b>'+(i+1)+'. '+m.name+'</b>');
+    ${sections}
+    <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:10px;margin-top:8px;font-size:11px;color:#7c5800;line-height:1.8;">
+      ※ OpenStreetMapのデータを使用。情報は必ずしも最新・正確ではありません。データ取得日：${now}
+    </div>
+    <div style="text-align:center;margin-top:16px;">
+      <button onclick="printKankyouReport()" style="padding:12px 32px;background:#1a3a5c;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨 印刷・PDF保存（A4）</button>
+    </div>`;
+
+  // Leaflet初期化
+  const _initMaps=()=>{
+    CATS.forEach((cat,ci)=>{
+      setTimeout(()=>{
+        const el=document.getElementById(`kmap-${cat.key}`);
+        if(!el||el._lmap){if(el&&el._lmap)el._lmap.invalidateSize();return;}
+        const map=L.map(el,{zoomControl:true,scrollWheelZoom:false}).setView([lat,lon],15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
+        el._lmap=map;
+        // 対象地点
+        L.marker([lat,lon],{icon:L.divIcon({html:'<div style="background:#e74c3c;border:3px solid #fff;border-radius:50%;width:16px;height:16px;box-shadow:0 2px 6px rgba(0,0,0,.4);"></div>',className:'',iconAnchor:[8,8]})}).addTo(map).bindPopup('📍 対象地点');
+        // 施設マーカー
+        cat.items.slice(0,10).forEach((item,i)=>{
+          L.marker([item.lat,item.lon],{icon:L.divIcon({html:`<div style="background:${cat.color};color:#fff;border:2px solid #fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,.3);">${i+1}</div>`,className:'',iconAnchor:[13,13]})}).addTo(map)
+            .bindPopup(`<b>${i+1}. ${item.tags?.name||''}</b><br>${item._dist}m（徒歩${Math.ceil(item._dist/80)}分）`);
         });
-        if(markers.length>0){
-          var bounds=L.latLngBounds([[lat,lon]].concat(markers.map(function(m){return[m.lat,m.lon];})));
-          map.fitBounds(bounds,{padding:[20,20]});
-        }
+        const pts=[[lat,lon],...cat.items.slice(0,10).map(m=>[m.lat,m.lon])];
+        map.fitBounds(L.latLngBounds(pts),{padding:[25,25]});
+        setTimeout(()=>map.invalidateSize(),500);
+      },ci*250); // 250ms間隔で順番に初期化（飲食店も確実に表示）
+    });
+  };
+
+  if(window.L){setTimeout(_initMaps,200);}
+  else{
+    const s=document.createElement('script');
+    s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s.onload=()=>setTimeout(_initMaps,200);
+    document.head.appendChild(s);
+  }
+}
+
+// ── 印刷 ──────────────────────────────────────────────────
+function printKankyouReport(){
+  const CATS=window._krCats;
+  const lat=window._krLat,lon=window._krLon;
+  const now=window._krNow||new Date().toLocaleDateString('ja-JP');
+  const addrEl=document.getElementById('report-addr-edit');
+  const title=addrEl?addrEl.value:(window._krAddr||'');
+  if(!CATS||!CATS.length){showToast('先にレポートを生成してください',true);return;}
+
+  const listHtmlP=(items,color,max=10)=>items.slice(0,max).map((item,i)=>`
+    <div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:12px;align-items:center;">
+      <span style="background:${color};color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</span>
+      <span style="flex:1;">${item.tags?.name||'(名称不明)'}</span>
+      <span style="color:#888;white-space:nowrap;">${item._dist}m（徒歩${Math.ceil(item._dist/80)}分）</span>
+    </div>`).join('');
+
+  const sectionsHtml=CATS.map((cat,ci)=>{
+    const mdata=cat.items.slice(0,10).map((m,i)=>({lat:m.lat,lon:m.lon,name:m.tags?.name||'',num:i+1}));
+    return`<div class="cat-section" ${ci>0?'style="page-break-before:always;"':''}>
+      <div style="background:${cat.color};color:#fff;padding:10px 16px;border-radius:6px 6px 0 0;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">${cat.icon}</span><span style="font-size:15px;font-weight:700;">${cat.label}</span>
+        <span style="opacity:.8;margin-left:auto;font-size:12px;">${cat.items.length}件</span>
+      </div>
+      <div id="pm-${cat.key}" class="map-box" data-lat="${lat}" data-lon="${lon}" data-color="${cat.color}" data-markers='${JSON.stringify(mdata).replace(/'/g,"&#39;")}' style="height:350px;border:1px solid #ddd;border-top:none;background:#eee;"></div>
+      <div style="border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;padding:12px;">${listHtmlP(cat.items,cat.color,10)}</div>
+    </div>`;
+  }).join('\n');
+
+  const win=window.open('','_blank','width=860,height=700');
+  win.document.write(`<!DOCTYPE html><html lang="ja"><head>
+<meta charset="UTF-8"><title>周辺環境レポート</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;background:#fff;}
+.wrap{max-width:760px;margin:0 auto;padding:14px;}
+.cat-section{margin-bottom:20px;}
+@media print{
+  @page{size:A4 portrait;margin:10mm 8mm;}
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .cat-section{page-break-inside:avoid;}
+  .map-box{height:330px!important;}
+}
+</style></head><body><div class="wrap">
+<div style="background:linear-gradient(135deg,#1a5c3a,#27ae60);color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:14px;">
+  <div style="font-size:17px;font-weight:700;margin-bottom:4px;">周辺環境レポート</div>
+  <div style="font-size:13px;opacity:.9;">📍 ${title}</div>
+  <div style="font-size:11px;opacity:.7;margin-top:3px;">作成日時：${now}</div>
+</div>
+${sectionsHtml}
+<div style="background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:10px;margin-top:14px;font-size:11px;color:#7c5800;line-height:1.8;page-break-inside:avoid;">
+  ※ 本レポートはOpenStreetMapのデータを使用しています。情報は必ずしも最新・正確ではありません。
+</div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+<script>
+window.addEventListener('load',function(){
+  var boxes=document.querySelectorAll('.map-box');
+  var total=boxes.length,done=0;
+  boxes.forEach(function(el,ci){
+    setTimeout(function(){
+      var clat=parseFloat(el.dataset.lat),clon=parseFloat(el.dataset.lon),color=el.dataset.color;
+      var markers=JSON.parse(el.dataset.markers||'[]');
+      var map=L.map(el,{zoomControl:false,scrollWheelZoom:false,attributionControl:true}).setView([clat,clon],15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OSM'}).addTo(map);
+      L.marker([clat,clon],{icon:L.divIcon({html:'<div style="background:#e74c3c;border:3px solid #fff;border-radius:50%;width:14px;height:14px;box-shadow:0 2px 4px rgba(0,0,0,.4);"></div>',className:'',iconAnchor:[7,7]})}).addTo(map);
+      markers.forEach(function(m,i){
+        L.marker([m.lat,m.lon],{icon:L.divIcon({html:'<div style="background:'+color+';color:#fff;border:2px solid #fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">'+(i+1)+'</div>',className:'',iconAnchor:[12,12]})}).addTo(map);
       });
-      // 地図の描画が完了してから印刷
-      setTimeout(function(){ window.print(); }, 2500);
-    };
-  <\/script>
-  </body></html>`);
+      var pts=[[clat,clon]].concat(markers.map(function(m){return[m.lat,m.lon];}));
+      map.fitBounds(L.latLngBounds(pts),{padding:[20,20]});
+      setTimeout(function(){
+        map.invalidateSize();
+        done++;
+        if(done>=total)setTimeout(function(){window.print();},1000);
+      },700);
+    },ci*350);
+  });
+});
+<\/script></body></html>`);
   win.document.close();
 }
+
+// ── 履歴管理 ──────────────────────────────────────────────
+function renderKankyouHistory(){
+  const el=document.getElementById('kankyou-history-list');
+  if(!el)return;
+  let hist=[];try{hist=JSON.parse(localStorage.getItem('fud_kankyou_hist')||'[]');}catch(e){}
+  if(!hist.length){el.innerHTML='<div class="empty">履歴はありません</div>';return;}
+  el.innerHTML=hist.map((h,i)=>`
+    <div class="hist-item" style="flex-direction:column;align-items:flex-start;gap:3px;" onclick="loadKankyouHistory(${i})">
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+        <div class="hist-addr" style="font-weight:600;">${h.title||h.addr}</div>
+        <button onclick="event.stopPropagation();deleteKankyouHistory(${i})" class="hist-del">×</button>
+      </div>
+      <div class="hist-sub">${h.date} / ${h.cats?.length||0}カテゴリ</div>
+    </div>`).join('');
+}
+
+function loadKankyouHistory(i){
+  let hist=[];try{hist=JSON.parse(localStorage.getItem('fud_kankyou_hist')||'[]');}catch(e){}
+  const h=hist[i];if(!h)return;
+  window._krLat=h.lat; window._krLon=h.lon;
+  window._krAddr=h.addr; window._krCats=h.cats; window._krNow=h.date;
+  const resultEl=document.getElementById('kankyou-result');
+  _renderKankyouResult(h.cats,h.lat,h.lon,h.title||h.addr,h.date,resultEl);
+  showToast('履歴を読み込みました：'+(h.title||h.addr));
+}
+
+function deleteKankyouHistory(i){
+  let hist=[];try{hist=JSON.parse(localStorage.getItem('fud_kankyou_hist')||'[]');}catch(e){}
+  hist.splice(i,1);
+  localStorage.setItem('fud_kankyou_hist',JSON.stringify(hist));
+  renderKankyouHistory();
+}
+
+function clearKankyouHistory(){
+  if(!confirm('レポート履歴を全て削除しますか？'))return;
+  localStorage.removeItem('fud_kankyou_hist');
+  renderKankyouHistory();
+}
+
 
 function saveStaffName(){
   const name = document.getElementById('staff-name-input')?.value.trim();
