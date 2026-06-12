@@ -4144,41 +4144,52 @@ async function _generateKankyouReportCore(lat, lon, addr){
     }
 
     function renderAllMaps(){
-      CATEGORIES.forEach(cat => {
-        const el = document.getElementById(`kankyou-map-${cat.key}`);
-        if(!el || el._leaflet_id) return;
+      const mapEls = document.querySelectorAll('[id^="kankyou-map-"]');
+      mapEls.forEach((el, idx) => {
+        if(el._leaflet_id) return;
         const clat = parseFloat(el.dataset.lat);
         const clon = parseFloat(el.dataset.lon);
         const markers = JSON.parse(el.dataset.markers||'[]');
         const color = el.dataset.color;
 
-        const map = L.map(el, { zoomControl:true, scrollWheelZoom:false }).setView([clat,clon], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-          attribution:'© OpenStreetMap', maxZoom:19
-        }).addTo(map);
+        // 少し遅延させて確実にDOMサイズが確定してから初期化
+        setTimeout(() => {
+          if(el._leaflet_id) return; // 重複防止
+          const map = L.map(el, { zoomControl:true, scrollWheelZoom:false }).setView([clat,clon], 15);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+            attribution:'© OpenStreetMap', maxZoom:19
+          }).addTo(map);
 
-        // 対象地点マーカー（赤い星）
-        const centerIcon = L.divIcon({
-          html:`<div style="background:#e74c3c;border:3px solid #fff;border-radius:50%;width:16px;height:16px;box-shadow:0 2px 6px rgba(0,0,0,.4);"></div>`,
-          className:'', iconAnchor:[8,8]
-        });
-        L.marker([clat,clon],{icon:centerIcon}).addTo(map).bindPopup('📍 対象地点');
+          // サイズを再計算（最重要）
+          map.invalidateSize();
 
-        // 施設マーカー（番号付き）
-        markers.forEach((m,i) => {
-          const icon = L.divIcon({
-            html:`<div style="background:${color};color:#fff;border:2px solid #fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,.3);">${i+1}</div>`,
-            className:'', iconAnchor:[13,13]
+          // 対象地点マーカー
+          const centerIcon = L.divIcon({
+            html:`<div style="background:#e74c3c;border:3px solid #fff;border-radius:50%;width:16px;height:16px;box-shadow:0 2px 6px rgba(0,0,0,.4);"></div>`,
+            className:'', iconAnchor:[8,8]
           });
-          L.marker([m.lat,m.lon],{icon}).addTo(map)
-           .bindPopup(`<b>⑤${i+1} ${m.name}</b><br>${m.dist}m（徒歩${Math.ceil(m.dist/80)}分）`);
-        });
+          L.marker([clat,clon],{icon:centerIcon}).addTo(map).bindPopup('📍 対象地点');
 
-        // 全マーカーが収まるようズーム調整
-        if(markers.length > 0){
-          const bounds = L.latLngBounds([[clat,clon],...markers.map(m=>[m.lat,m.lon])]);
-          map.fitBounds(bounds, {padding:[20,20]});
-        }
+          // 施設マーカー（番号付き）
+          markers.forEach((m,i) => {
+            const icon = L.divIcon({
+              html:`<div style="background:${color};color:#fff;border:2px solid #fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,.3);">${i+1}</div>`,
+              className:'', iconAnchor:[13,13]
+            });
+            L.marker([m.lat,m.lon],{icon}).addTo(map)
+             .bindPopup(`<b>${i+1}. ${m.name}</b><br>${m.dist}m（徒歩${Math.ceil(m.dist/80)}分）`);
+          });
+
+          // 全マーカーが収まるようズーム調整
+          if(markers.length > 0){
+            const bounds = L.latLngBounds([[clat,clon],...markers.map(m=>[m.lat,m.lon])]);
+            map.fitBounds(bounds, {padding:[30,30]});
+          }
+
+          // fitBounds後も再度サイズ確認
+          setTimeout(() => map.invalidateSize(), 300);
+
+        }, idx * 150); // 地図ごとに150ms間隔でずらして初期化
       });
     }
 
