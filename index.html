@@ -4022,83 +4022,167 @@ async function _generateKankyouReportCore(lat, lon, addr){
 
     // レポートHTML生成
     const now = new Date().toLocaleDateString('ja-JP') + ' ' + new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    // ── カテゴリ定義 ──
+    const CATEGORIES = [
+      { key:'transport', label:'交通（駅・バス停）', icon:'🚉', color:'#2c3e50', items: stationList },
+      { key:'shop',      label:'スーパー・コンビニ', icon:'🛒', color:'#e67e22', items: [...superList, ...convList] },
+      { key:'hospital',  label:'病院・医療機関',     icon:'🏥', color:'#e74c3c', items: [...hospitalList, ...pharmacyList] },
+      { key:'school',    label:'学校・教育施設',     icon:'🏫', color:'#8e44ad', items: schoolList },
+      { key:'park',      label:'公園',               icon:'🌳', color:'#27ae60', items: parkList },
+      { key:'gov',       label:'公共施設',           icon:'🏛', color:'#2980b9', items: govList },
+      { key:'food',      label:'飲食店・カフェ',     icon:'🍽', color:'#c0392b', items: restaurantList },
+      { key:'bank',      label:'金融機関',           icon:'🏦', color:'#7f8c8d', items: bankList },
+    ].filter(c => c.items.length > 0);
+
+    // ── 施設リストHTML（番号付き） ──
+    function facilityListHtml(items, max=8){
+      if(!items.length) return '<div style="color:#aaa;font-size:12px;">該当施設なし</div>';
+      return items.slice(0,max).map((item,i) => {
+        const name = item.tags?.name || '(名称不明)';
+        const walk = Math.ceil(item._dist/80);
+        return `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:12px;align-items:center;">
+          <span style="background:${item._catColor};color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</span>
+          <span style="flex:1;">${name}</span>
+          <span style="color:#888;white-space:nowrap;">${item._dist}m（徒歩${walk}分）</span>
+        </div>`;
+      }).join('');
+    }
+
+    // 各施設にカテゴリカラーを付与
+    CATEGORIES.forEach(cat => {
+      cat.items.forEach(item => { item._catColor = cat.color; item._catLabel = cat.label; });
+    });
+
+    // ── サマリー行 ──
+    const summaryRows = CATEGORIES.map(c => {
+      const first = c.items[0];
+      if(!first) return '';
+      return `<div style="display:flex;gap:6px;align-items:center;padding:4px 0;font-size:12px;">
+        <span style="font-size:15px;">${c.icon}</span>
+        <span style="font-weight:600;color:${c.color};min-width:130px;">${c.label}</span>
+        <span>${first.tags?.name||''}（${first._dist}m・徒歩${Math.ceil(first._dist/80)}分）</span>
+      </div>`;
+    }).join('');
+
+    // ── 地図＋一覧のセクションHTML（Leaflet使用） ──
+    function mapSectionHtml(cat, idx){
+      const mapId = `kankyou-map-${cat.key}`;
+      const markerData = JSON.stringify(cat.items.slice(0,10).map((item,i) => ({
+        lat: item.lat, lon: item.lon, name: item.tags?.name||'(名称不明)', num: i+1, dist: item._dist
+      })));
+      return `
+        <div class="report-page-section" style="page-break-inside:avoid;margin-bottom:0;">
+          <div style="background:${cat.color};color:#fff;padding:10px 16px;border-radius:6px 6px 0 0;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:18px;">${cat.icon}</span>
+            <span style="font-size:15px;font-weight:700;">${cat.label}</span>
+            <span style="font-size:12px;opacity:.8;margin-left:auto;">${cat.items.length}件</span>
+          </div>
+          <!-- 地図 -->
+          <div id="${mapId}" style="height:320px;border:1px solid #ddd;border-top:none;" data-lat="${lat}" data-lon="${lon}" data-markers='${markerData}' data-color="${cat.color}"></div>
+          <!-- 施設一覧 -->
+          <div style="border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;padding:12px;">
+            ${facilityListHtml(cat.items, 10)}
+          </div>
+        </div>`;
+    }
+
+    const sectionsHtml = CATEGORIES.map((cat,i) => mapSectionHtml(cat,i)).join('\n<div style="page-break-after:always;"></div>\n');
+
+    const displayAddr = addr.startsWith('緯度') ? `緯度 ${lat.toFixed(6)}, 経度 ${lon.toFixed(6)}` : addr;
+
     const reportHtml = `
-      <!-- ヘッダー -->
-      <div class="card" style="background:linear-gradient(135deg,#1a5c3a,#27ae60);color:#fff;margin-bottom:14px;">
-        <div style="font-size:16px;font-weight:700;margin-bottom:6px;">周辺環境レポート</div>
-        <div style="font-size:13px;opacity:.9;margin-bottom:4px;">📍 ${addr}</div>
-        <div style="font-size:11px;opacity:.7;">作成日時：${now}</div>
+      <!-- Leaflet CSS -->
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+      <!-- タイトル（編集可） -->
+      <div style="background:linear-gradient(135deg,#1a5c3a,#27ae60);color:#fff;padding:20px;border-radius:8px;margin-bottom:16px;" class="no-print-edit">
+        <div style="font-size:18px;font-weight:700;margin-bottom:6px;">周辺環境レポート</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="font-size:13px;opacity:.9;">📍</span>
+          <input id="report-addr-edit" value="${displayAddr.replace(/"/g,'&quot;')}"
+            style="flex:1;font-size:13px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:4px;padding:4px 8px;color:#fff;outline:none;"
+            placeholder="住所または場所名を入力"/>
+        </div>
+        <div style="font-size:11px;opacity:.7;">作成日時：${now}　　<span style="font-size:10px;">✏️ 住所欄は直接編集できます</span></div>
       </div>
 
       <!-- サマリー -->
-      <div class="card" style="margin-bottom:14px;background:#f0fdf4;border-color:#9FD4B8;">
-        <div style="font-size:13px;font-weight:700;color:var(--ok);margin-bottom:10px;">📋 周辺環境サマリー</div>
-        <div style="font-size:12px;line-height:2.2;">
-          🚉 ${stationSummary}<br>
-          🛒 最寄りスーパー：${superList[0] ? superList[0].tags?.name+'（'+superList[0]._dist+'m）' : 'データなし'}<br>
-          🏪 最寄りコンビニ：${convList[0] ? convList[0].tags?.name+'（'+convList[0]._dist+'m）' : 'データなし'}<br>
-          🏥 最寄り病院・クリニック：${hospitalList[0] ? hospitalList[0].tags?.name+'（'+hospitalList[0]._dist+'m）' : 'データなし'}<br>
-          🌳 最寄り公園：${parkList[0] ? parkList[0].tags?.name+'（'+parkList[0]._dist+'m）' : 'データなし'}<br>
-          🏫 周辺の学校：${schoolList.length > 0 ? schoolList.slice(0,2).map(s=>s.tags?.name).join('、') : 'データなし'}
-        </div>
+      <div style="background:#f0fdf4;border:1px solid #9FD4B8;border-radius:8px;padding:14px;margin-bottom:16px;page-break-inside:avoid;">
+        <div style="font-size:13px;font-weight:700;color:#0F5132;margin-bottom:8px;">📋 周辺環境サマリー</div>
+        ${summaryRows}
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <!-- 交通 -->
-        ${kankyouCard('🚉','交通（駅・バス停）','#2c3e50', stationList.length ?
-          `<div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:6px;">駅</div>${renderFacilityList(stationList, 5)}` :
-          '<div style="color:var(--hint);font-size:12px;">データなし</div>'
-        )}
-
-        <!-- スーパー・コンビニ -->
-        ${kankyouCard('🛒','スーパー・コンビニ','#e67e22',
-          `<div style="font-size:11px;font-weight:600;color:var(--sub);margin-bottom:4px;">スーパー</div>${renderFacilityList(superList,3)}
-           <div style="font-size:11px;font-weight:600;color:var(--sub);margin:8px 0 4px;">コンビニ</div>${renderFacilityList(convList,3)}`
-        )}
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <!-- 病院・薬局 -->
-        ${kankyouCard('🏥','病院・医療機関','#e74c3c',
-          `<div style="font-size:11px;font-weight:600;color:var(--sub);margin-bottom:4px;">病院・クリニック</div>${renderFacilityList(hospitalList,4)}
-           <div style="font-size:11px;font-weight:600;color:var(--sub);margin:8px 0 4px;">薬局</div>${renderFacilityList(pharmacyList,3)}`
-        )}
-
-        <!-- 学校 -->
-        ${kankyouCard('🏫','学校・教育施設','#8e44ad', renderFacilityList(schoolList, 6))}
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <!-- 公園 -->
-        ${kankyouCard('🌳','公園','#27ae60', renderFacilityList(parkList, 5))}
-
-        <!-- 公共施設 -->
-        ${kankyouCard('🏛','公共施設','#2980b9', renderFacilityList(govList, 5))}
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-        <!-- 飲食店 -->
-        ${kankyouCard('🍽','飲食店・カフェ','#e67e22', renderFacilityList(restaurantList, 5))}
-
-        <!-- 銀行 -->
-        ${kankyouCard('🏦','金融機関','#7f8c8d', renderFacilityList(bankList, 4))}
-      </div>
-
-      <!-- PDF出力ボタン -->
-      <div style="text-align:center;margin-top:16px;">
-        <button class="pbtn" onclick="printKankyouReport()" style="padding:12px 32px;font-size:14px;">🖨 レポートを印刷・PDF保存</button>
-        <p style="font-size:11px;color:var(--hint);margin-top:8px;">印刷ダイアログで「PDFに保存」を選択するとPDFとして保存できます</p>
-      </div>
+      <!-- 各カテゴリの地図＋一覧 -->
+      ${sectionsHtml}
 
       <!-- 注意書き -->
-      <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:var(--r);padding:10px 14px;margin-top:12px;font-size:11px;color:#7c5800;line-height:1.8;">
+      <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:10px 14px;margin-top:16px;font-size:11px;color:#7c5800;line-height:1.8;page-break-inside:avoid;">
         ※ 本レポートはOpenStreetMapのデータを使用しています。情報は必ずしも最新・正確ではない場合があります。<br>
         ※ 実際の取引にあたっては現地確認および公的機関への確認をお勧めします。<br>
         データ取得日：${now}
       </div>
+
+      <!-- 印刷ボタン -->
+      <div style="text-align:center;margin-top:20px;" class="no-print">
+        <button onclick="printKankyouReport()" style="padding:12px 32px;background:#1a3a5c;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨 印刷・PDF保存（A4）</button>
+        <p style="font-size:11px;color:#aaa;margin-top:6px;">印刷ダイアログで「PDFに保存」を選択するとPDFとして保存できます</p>
+      </div>
     `;
 
     resultEl.innerHTML = reportHtml;
+
+    // Leaflet JSを読み込んで地図を描画
+    function initKankyouMaps(){
+      if(!window.L){
+        const s = document.createElement('script');
+        s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        s.onload = () => renderAllMaps();
+        document.head.appendChild(s);
+      } else {
+        renderAllMaps();
+      }
+    }
+
+    function renderAllMaps(){
+      CATEGORIES.forEach(cat => {
+        const el = document.getElementById(`kankyou-map-${cat.key}`);
+        if(!el || el._leaflet_id) return;
+        const clat = parseFloat(el.dataset.lat);
+        const clon = parseFloat(el.dataset.lon);
+        const markers = JSON.parse(el.dataset.markers||'[]');
+        const color = el.dataset.color;
+
+        const map = L.map(el, { zoomControl:true, scrollWheelZoom:false }).setView([clat,clon], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+          attribution:'© OpenStreetMap', maxZoom:19
+        }).addTo(map);
+
+        // 対象地点マーカー（赤い星）
+        const centerIcon = L.divIcon({
+          html:`<div style="background:#e74c3c;border:3px solid #fff;border-radius:50%;width:16px;height:16px;box-shadow:0 2px 6px rgba(0,0,0,.4);"></div>`,
+          className:'', iconAnchor:[8,8]
+        });
+        L.marker([clat,clon],{icon:centerIcon}).addTo(map).bindPopup('📍 対象地点');
+
+        // 施設マーカー（番号付き）
+        markers.forEach((m,i) => {
+          const icon = L.divIcon({
+            html:`<div style="background:${color};color:#fff;border:2px solid #fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,.3);">${i+1}</div>`,
+            className:'', iconAnchor:[13,13]
+          });
+          L.marker([m.lat,m.lon],{icon}).addTo(map)
+           .bindPopup(`<b>⑤${i+1} ${m.name}</b><br>${m.dist}m（徒歩${Math.ceil(m.dist/80)}分）`);
+        });
+
+        // 全マーカーが収まるようズーム調整
+        if(markers.length > 0){
+          const bounds = L.latLngBounds([[clat,clon],...markers.map(m=>[m.lat,m.lon])]);
+          map.fitBounds(bounds, {padding:[20,20]});
+        }
+      });
+    }
+
+    setTimeout(initKankyouMaps, 100);
     saveWorkHistory('kankyou', `周辺環境レポート：${addr}`, {addr}, addr);
 
   }catch(e){
@@ -4118,23 +4202,102 @@ async function _generateKankyouReportCore(lat, lon, addr){
 
 // 印刷用
 function printKankyouReport(){
-  const addr = document.getElementById('kankyou-addr').value;
-  const content = document.getElementById('kankyou-result').innerHTML;
-  const win = window.open('', '_blank');
+  const resultEl = document.getElementById('kankyou-result');
+  const addrEl = document.getElementById('report-addr-edit');
+  const displayAddr = addrEl ? addrEl.value : document.getElementById('kankyou-addr').value;
+
+  // 地図のスクリーンショット代わりにLeafletの静的タイル画像URLを生成
+  const win = window.open('', '_blank', 'width=900,height=700');
+
+  // 各カテゴリの地図データを収集
+  const mapSections = [];
+  document.querySelectorAll('[id^="kankyou-map-"]').forEach(el => {
+    const key = el.id.replace('kankyou-map-','');
+    const lat = el.dataset.lat, lon = el.dataset.lon;
+    const markers = JSON.parse(el.dataset.markers||'[]');
+    const color = el.dataset.color;
+    const section = el.closest('.report-page-section');
+    const title = section?.querySelector('span:nth-child(2)')?.textContent||'';
+    const icon  = section?.querySelector('span:first-child')?.textContent||'';
+    const listHtml = section?.querySelector('div:last-child')?.innerHTML||'';
+    mapSections.push({key, lat, lon, markers, color, title, icon, listHtml});
+  });
+
+  const now = new Date().toLocaleDateString('ja-JP') + ' ' + new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+
+  const sectionsHtml = mapSections.map((s,idx) => `
+    <div class="page-section" style="page-break-inside:avoid;margin-bottom:0;${idx>0?'page-break-before:always;':''}">
+      <div style="background:${s.color};color:#fff;padding:10px 16px;display:flex;align-items:center;gap:8px;border-radius:6px 6px 0 0;">
+        <span style="font-size:18px;">${s.icon}</span>
+        <span style="font-size:15px;font-weight:700;">${s.title}</span>
+        <span style="font-size:12px;opacity:.8;margin-left:auto;">${s.markers.length}件</span>
+      </div>
+      <div id="print-map-${s.key}" style="height:380px;border:1px solid #ddd;border-top:none;"
+        data-lat="${s.lat}" data-lon="${s.lon}"
+        data-markers='${JSON.stringify(s.markers).replace(/'/g,"&#39;")}'
+        data-color="${s.color}"></div>
+      <div style="border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;padding:12px;">
+        ${s.listHtml}
+      </div>
+    </div>`).join('\n');
+
   win.document.write(`<!DOCTYPE html><html lang="ja"><head>
     <meta charset="UTF-8">
-    <title>周辺環境レポート - ${addr}</title>
+    <title>周辺環境レポート - ${displayAddr}</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
-      body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;font-size:12px;color:#1a1a1a;padding:20px;max-width:800px;margin:0 auto;}
-      .card{border:1px solid #ddd;border-radius:8px;padding:14px;margin-bottom:12px;}
-      .spin-wrap,.pbtn,button{display:none!important;}
-      h2{font-size:16px;}
-      @media print{.no-print{display:none;}}
-      div[style*="grid"]{display:block!important;}
+      *{box-sizing:border-box;margin:0;padding:0;}
+      body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:12px;color:#1a1a1a;background:#fff;}
+      .report-wrap{max-width:780px;margin:0 auto;padding:16px;}
+      .page-header{background:linear-gradient(135deg,#1a5c3a,#27ae60);color:#fff;padding:16px 20px;border-radius:8px;margin-bottom:14px;}
+      .summary-box{background:#f0fdf4;border:1px solid #9FD4B8;border-radius:8px;padding:14px;margin-bottom:14px;page-break-inside:avoid;}
+      .page-section{margin-bottom:24px;}
+      .note{background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:10px;font-size:11px;color:#7c5800;margin-top:16px;page-break-inside:avoid;}
+      @media print{
+        @page{size:A4;margin:12mm 10mm;}
+        body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+        .page-section{page-break-inside:avoid;}
+      }
     </style>
-  </head><body>${content}</body></html>`);
+  </head><body>
+  <div class="report-wrap">
+    <div class="page-header">
+      <div style="font-size:18px;font-weight:700;margin-bottom:6px;">周辺環境レポート</div>
+      <div style="font-size:13px;opacity:.9;">📍 ${displayAddr}</div>
+      <div style="font-size:11px;opacity:.7;margin-top:4px;">作成日時：${now}</div>
+    </div>
+    ${sectionsHtml}
+    <div class="note">
+      ※ 本レポートはOpenStreetMapのデータを使用しています。情報は必ずしも最新・正確ではない場合があります。<br>
+      ※ 実際の取引にあたっては現地確認および公的機関への確認をお勧めします。
+    </div>
+  </div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+  <script>
+    window.onload = function(){
+      document.querySelectorAll('[id^="print-map-"]').forEach(function(el){
+        var lat=parseFloat(el.dataset.lat), lon=parseFloat(el.dataset.lon);
+        var markers=JSON.parse(el.dataset.markers||'[]');
+        var color=el.dataset.color;
+        var map=L.map(el,{zoomControl:false,scrollWheelZoom:false,attributionControl:false}).setView([lat,lon],15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+        var ci=L.divIcon({html:'<div style="background:#e74c3c;border:3px solid #fff;border-radius:50%;width:14px;height:14px;box-shadow:0 2px 4px rgba(0,0,0,.4);"></div>',className:'',iconAnchor:[7,7]});
+        L.marker([lat,lon],{icon:ci}).addTo(map);
+        markers.forEach(function(m,i){
+          var icon=L.divIcon({html:'<div style="background:'+color+';color:#fff;border:2px solid #fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,.3);">'+(i+1)+'</div>',className:'',iconAnchor:[12,12]});
+          L.marker([m.lat,m.lon],{icon:icon}).addTo(map).bindPopup('<b>'+(i+1)+'. '+m.name+'</b>');
+        });
+        if(markers.length>0){
+          var bounds=L.latLngBounds([[lat,lon]].concat(markers.map(function(m){return[m.lat,m.lon];})));
+          map.fitBounds(bounds,{padding:[20,20]});
+        }
+      });
+      // 地図の描画が完了してから印刷
+      setTimeout(function(){ window.print(); }, 2500);
+    };
+  <\/script>
+  </body></html>`);
   win.document.close();
-  setTimeout(()=>win.print(), 500);
 }
 
 function saveStaffName(){
