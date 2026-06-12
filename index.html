@@ -240,11 +240,8 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
     <div class="nav-btn" onclick="showPage('chosa',this)">📋 重要事項調査報告書</div>
     <div class="nav-btn" onclick="showPage('notifications',this)" id="nav-notifications" style="position:relative;">🔔 通知 <span id="notif-badge" style="display:none;background:#c0392b;color:#fff;border-radius:99px;font-size:9px;padding:1px 5px;margin-left:2px;">0</span></div>
     <div class="nav-btn" onclick="showPage('customers',this)">👥 顧客管理</div>
-    <div class="nav-btn" onclick="showPage('flyer',this)">🏠 販売図面</div>
     <div class="nav-btn" onclick="showPage('chat',this)">💬 AIチャット</div>
     <div class="nav-btn" onclick="showPage('template',this)">📝 テンプレート入力</div>
-    <div class="nav-btn" onclick="showPage('dbxfiles',this)">☁ Dropboxファイル</div>
-    <div class="nav-btn" onclick="showPage('dashboard',this)" style="color:#f39c12;font-weight:700;">📊 管理ダッシュボード</div>
     <div class="nav-btn" onclick="showPage('kankyou',this)" style="color:#27ae60;font-weight:700;">🗺 周辺環境レポート</div>
   </div>
 
@@ -374,30 +371,6 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
         <div id="customer-list"></div>
       </div>
 
-      <!-- 販売図面 -->
-      <div class="page" id="page-flyer">
-        <div style="max-width:760px;">
-          <h2 style="font-size:17px;font-weight:700;margin-bottom:16px;">販売図面 作成</h2>
-          <div class="card">
-            <div class="card-title">物件情報入力</div>
-            <div class="form-grid" style="margin-bottom:10px;">
-              <div class="form-group"><div class="form-label">物件名称</div><div class="fi"><input type="text" id="fl-name" placeholder="○○邸・○○マンション○号室"/></div></div>
-              <div class="form-group"><div class="form-label">種別</div><div class="fi"><select id="fl-type"><option>戸建</option><option>マンション</option><option>土地</option><option>収益物件</option></select></div></div>
-              <div class="form-group"><div class="form-label">所在地</div><div class="fi"><input type="text" id="fl-addr" placeholder="東京都○○区…"/></div></div>
-              <div class="form-group"><div class="form-label">価格</div><div class="fi"><input type="text" id="fl-price" placeholder="例：4,980万円"/></div></div>
-              <div class="form-group"><div class="form-label">土地面積</div><div class="fi"><input type="text" id="fl-land" placeholder="例：120.50㎡（36.45坪）"/></div></div>
-              <div class="form-group"><div class="form-label">建物面積</div><div class="fi"><input type="text" id="fl-build" placeholder="例：98.55㎡（29.81坪）"/></div></div>
-              <div class="form-group"><div class="form-label">築年月</div><div class="fi"><input type="text" id="fl-year" placeholder="例：2010年3月築"/></div></div>
-              <div class="form-group"><div class="form-label">間取り</div><div class="fi"><input type="text" id="fl-madori" placeholder="例：4LDK"/></div></div>
-              <div class="form-group"><div class="form-label">用途地域</div><div class="fi"><input type="text" id="fl-yoto" placeholder="第一種住居地域"/></div></div>
-              <div class="form-group"><div class="form-label">建蔽率/容積率</div><div class="fi"><input type="text" id="fl-ratio" placeholder="60%／200%"/></div></div>
-            </div>
-            <div class="form-group" style="margin-bottom:14px;"><div class="form-label">セールスポイント・備考</div><div class="fi"><textarea id="fl-pr" placeholder="日当たり良好・閑静な住宅街・駅徒歩○分…"></textarea></div></div>
-            <button class="pbtn" onclick="generateFlyer()">✨ AIで販売図面のキャッチコピーを生成</button>
-          </div>
-          <div id="flyer-output" style="display:none;"></div>
-        </div>
-      </div>
 
       <!-- テンプレート入力 -->
       <div class="page" id="page-template">
@@ -615,82 +588,6 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
         </div>
       </div>
 
-      <!-- Dropboxファイル -->
-      <div class="page" id="page-dbxfiles">
-        <div style="max-width:800px;">
-          <h2 style="font-size:17px;font-weight:700;margin-bottom:4px;">☁ Dropboxファイル読込</h2>
-          <p style="font-size:12px;color:var(--sub);margin-bottom:16px;">フォルダをまるごとドロップするか、Dropboxから直接読み込んで一括解析できます。</p>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-            <!-- ローカルフォルダドロップ -->
-            <div class="card" style="margin:0;">
-              <div class="card-title">① PCのフォルダをドロップ</div>
-              <div id="folder-drop-zone" class="drop-zone"
-                ondragover="event.preventDefault();this.classList.add('drag')"
-                ondragleave="this.classList.remove('drag')"
-                ondrop="onFolderDrop(event)"
-                onclick="document.getElementById('folder-input').click()"
-                style="padding:20px;">
-                <div style="font-size:28px;margin-bottom:8px;">📁</div>
-                <p style="font-size:12px;">フォルダをここにドロップ<br>または クリックして選択</p>
-                <small>フォルダ内のPDFを一括読み込み</small>
-              </div>
-              <input type="file" id="folder-input" webkitdirectory multiple accept=".pdf" style="display:none" onchange="onFolderSelected(event)"/>
-              <div id="folder-badge" style="margin-top:8px;font-size:12px;color:var(--sub);"></div>
-            </div>
-
-            <!-- Dropboxフォルダ読込 -->
-            <div class="card" style="margin:0;">
-              <div class="card-title">② Dropboxから読み込む</div>
-              <p style="font-size:11px;color:var(--sub);margin-bottom:8px;">Dropboxのフォルダパスを入力して一覧取得</p>
-              <div style="display:flex;gap:6px;margin-bottom:8px;">
-                <input type="text" id="dbxf-folder" value="/tento-fudosan" style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;outline:none;font-family:monospace;"/>
-                <button class="pbtn" style="width:auto;padding:7px 12px;font-size:12px;" onclick="loadDbxFilePage()">取得</button>
-              </div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">
-                <button onclick="document.getElementById('dbxf-folder').value='/tento-fudosan'" style="background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;">全体</button>
-                <button onclick="document.getElementById('dbxf-folder').value='/tento-fudosan/toki'" style="background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;">謄本</button>
-                <button onclick="document.getElementById('dbxf-folder').value='/tento-fudosan/toshi'" style="background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;">都市計画</button>
-                <button onclick="document.getElementById('dbxf-folder').value='/tento-fudosan/kanri'" style="background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;">管理規約</button>
-              </div>
-              <div id="dbxf-list" style="display:none;">
-                <div style="font-size:11px;font-weight:600;color:var(--sub);margin-bottom:6px;" id="dbxf-list-title"></div>
-                <div id="dbxf-items" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r);"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 読み込み済みファイル一覧 -->
-          <div class="card" id="loaded-files-card" style="display:none;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <div class="card-title" style="margin:0;">読み込み済みファイル</div>
-              <div style="display:flex;gap:8px;">
-                <button class="obtn" onclick="analyzeAllLoaded()">📊 全件を謄本解析</button>
-                <button class="obtn" onclick="aiReadAllLoaded()">✨ 全件をAI読込</button>
-                <button class="obtn" onclick="clearLoadedFiles()">クリア</button>
-              </div>
-            </div>
-            <div id="loaded-files-list"></div>
-          </div>
-
-          <!-- 解析結果 -->
-          <div id="dbxf-preview" style="display:none;">
-            <div class="card">
-              <div class="card-title">AI解析結果</div>
-              <div id="dbxf-result"></div>
-            </div>
-          </div>
-
-          <div class="card" style="background:var(--alight);border-color:#B5D4F4;">
-            <div style="font-size:12px;color:#0C447C;line-height:1.8;">
-              <b>使い方のヒント</b><br>
-              ・PCのフォルダをそのままドロップ → フォルダ内のPDFを自動検出して一覧表示<br>
-              ・「全件を謄本解析」→ 複数謄本を一括解析して合計面積・抵当権を集計<br>
-              ・「全件をAI読込」→ 都市計画資料・管理規約などをAIが要約
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- AIチャット -->
             <!-- AIチャット -->
@@ -734,68 +631,6 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
         </div>
       </div>
 
-      <div class="page" id="page-dashboard">
-        <div style="max-width:960px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <div>
-              <h2 style="font-size:17px;font-weight:700;margin-bottom:4px;">📊 管理ダッシュボード</h2>
-              <p style="font-size:12px;color:var(--sub);">全社員の作業状況をリアルタイムで確認できます</p>
-            </div>
-            <button class="obtn" onclick="loadDashboard()">🔄 更新</button>
-          </div>
-
-          <!-- 担当者名設定 -->
-          <div class="card" style="margin-bottom:14px;background:var(--okbg);border-color:#9FD4B8;">
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-              <div style="font-size:12px;font-weight:700;color:var(--ok);">👤 あなたの担当者名</div>
-              <input type="text" id="staff-name-input" placeholder="例：鈴木 浩文" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;width:160px;outline:none;"/>
-              <button class="btn-ok" onclick="saveStaffName()">保存</button>
-              <span id="staff-name-current" style="font-size:12px;color:var(--sub);"></span>
-            </div>
-          </div>
-
-          <!-- サマリーカード -->
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">
-            <div class="card" style="margin:0;text-align:center;">
-              <div style="font-size:24px;font-weight:700;color:var(--accent);" id="db-total-works">-</div>
-              <div style="font-size:11px;color:var(--sub);margin-top:4px;">総作業数</div>
-            </div>
-            <div class="card" style="margin:0;text-align:center;">
-              <div style="font-size:24px;font-weight:700;color:var(--ok);" id="db-today-works">-</div>
-              <div style="font-size:11px;color:var(--sub);margin-top:4px;">今日の作業</div>
-            </div>
-            <div class="card" style="margin:0;text-align:center;">
-              <div style="font-size:24px;font-weight:700;color:#e67e22;" id="db-total-staff">-</div>
-              <div style="font-size:11px;color:var(--sub);margin-top:4px;">担当者数</div>
-            </div>
-            <div class="card" style="margin:0;text-align:center;">
-              <div style="font-size:24px;font-weight:700;color:#8e44ad;" id="db-total-chat">-</div>
-              <div style="font-size:11px;color:var(--sub);margin-top:4px;">チャット件数</div>
-            </div>
-          </div>
-
-          <!-- 作業履歴一覧 -->
-          <div class="card" style="margin-bottom:14px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <div class="card-title" style="margin:0;">📋 最近の作業履歴（全社員）</div>
-              <select id="db-filter-staff" onchange="filterDashboard()" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--r);outline:none;">
-                <option value="">全員</option>
-              </select>
-            </div>
-            <div id="db-work-list" style="font-size:12px;">
-              <div style="text-align:center;color:var(--hint);padding:20px;">「更新」ボタンを押してください</div>
-            </div>
-          </div>
-
-          <!-- チャット履歴一覧 -->
-          <div class="card">
-            <div class="card-title">💬 チャット・重要事項説明書作成依頼の履歴</div>
-            <div id="db-chat-list" style="font-size:12px;">
-              <div style="text-align:center;color:var(--hint);padding:20px;">「更新」ボタンを押してください</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div class="page" id="page-chat">
         <div style="max-width:760px;display:flex;flex-direction:column;height:calc(100vh - 180px);">
@@ -1626,10 +1461,6 @@ function showPage(name, el) {
   if(page) page.classList.add('active');
   renderSidebar(name);
 
-  // ダッシュボードタブを開いたとき自動ロード
-  if(name === 'dashboard'){
-    setTimeout(loadDashboard, 100);
-  }
   if(name === 'template'){
     try{
       const saved = sessionStorage.getItem('fud_building_data');
@@ -1665,13 +1496,12 @@ function showPage(name, el) {
 function renderSidebar(page) {
   const sb = document.getElementById('sidebar-inner');
   const sideEl = document.getElementById('sidebar');
-  if (['customers','chat','jutaku','chosa','notifications','dbxfiles','template'].includes(page)) {
+  if (['customers','chat','jutaku','chosa','notifications','template'].includes(page)) {
     sideEl.style.display = 'none'; return;
   }
   sideEl.style.display = 'flex';
   if (page === 'search') sb.innerHTML = buildSearchSidebar();
   else if (page === 'registry') sb.innerHTML = buildRegSidebar();
-  else if (page === 'flyer') sb.innerHTML = buildFlyerSidebar();
   else sb.innerHTML = '';
 }
 
@@ -1751,9 +1581,6 @@ function buildRegSidebar(){
     <div><div class="sl" style="margin-bottom:7px;">解析履歴</div><div>${histItems||'<div class="empty">履歴なし</div>'}</div></div>`;
 }
 
-function buildFlyerSidebar(){
-  return `<div style="font-size:12px;color:var(--hint);line-height:1.8;"><b style="color:var(--text)">使い方</b><br>右側のフォームに物件情報を入力して「AI生成」を押すと、キャッチコピーと特記事項をAIが自動生成します。<br><br>行政調査の結果が自動で引用されます。</div>`;
-}
 
 // ══ 行政調査 ════════════════════════════════════════
 function extractCity(a){const m=a.match(/([^\s都道府県]+[区市町村])/);return m?m[1]:'';}
@@ -2197,47 +2024,6 @@ function editCustomer(id){
 }
 document.querySelectorAll('input[name="c-type"]').forEach(r=>{r.addEventListener('change',e=>{document.getElementById('buy-fields').style.display=e.target.value==='sell'?'none':'block';document.getElementById('sell-fields').style.display=e.target.value==='sell'?'block':'none';});});
 
-// ══ 販売図面 ══════════════════════════════════════════
-async function generateFlyer(){
-  const name=document.getElementById('fl-name').value;
-  const type=document.getElementById('fl-type').value;
-  const addr=document.getElementById('fl-addr').value;
-  const price=document.getElementById('fl-price').value;
-  const land=document.getElementById('fl-land').value;
-  const build=document.getElementById('fl-build').value;
-  const year=document.getElementById('fl-year').value;
-  const madori=document.getElementById('fl-madori').value;
-  const yoto=document.getElementById('fl-yoto').value;
-  const ratio=document.getElementById('fl-ratio').value;
-  const pr=document.getElementById('fl-pr').value;
-  if(!addr&&!name){alert('物件名称または所在地を入力してください');return;}
-  const apiKey=localStorage.getItem('fud_api')||'';
-  if(!apiKey.startsWith('sk-')){if(confirm('APIキーが未設定です。設定しますか？')){openApiModal();}return;}
-  document.getElementById('flyer-output').style.display='block';
-  document.getElementById('flyer-output').innerHTML='<div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);">販売図面を生成中...</div></div>';
-  const prompt=`以下の不動産物件の販売図面用キャッチコピーと特徴紹介文を作成してください。\n\n物件名：${name||addr}\n種別：${type}\n所在地：${addr}\n価格：${price}\n土地：${land}\n建物：${build}\n築年月：${year}\n間取り：${madori}\n用途地域：${yoto}\n建蔽率/容積率：${ratio}\nセールスポイント：${pr}\n\n【出力形式】\n◆キャッチコピー（30字以内で魅力的に）\n◆サブキャッチ（50字以内）\n◆物件概要文（200字程度、購入検討者向け）\n◆おすすめポイント（箇条書き3〜5点）\n\nシンプルで誠実、購買意欲を高める文章で作成してください。`;
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:MODEL,max_tokens:1500,messages:[{role:'user',content:prompt}]})});
-    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||res.status);}
-    const data=await res.json();
-    const text=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    document.getElementById('flyer-output').innerHTML=`
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-          <div class="card-title" style="margin:0;">販売図面 キャッチコピー・概要文</div>
-          <button class="obtn" onclick="navigator.clipboard.writeText(document.getElementById('flyer-text').textContent).then(()=>showToast('コピーしました'))">コピー</button>
-        </div>
-        <div id="flyer-text" style="font-size:13px;line-height:1.9;white-space:pre-wrap;">${text}</div>
-        <div class="divider" style="border:none;border-top:1px solid var(--border);margin:14px 0;"></div>
-        <div class="card-title">物件概要</div>
-        <table style="width:100%;border-collapse:collapse;font-size:12px;">
-          ${[[name,'物件名'],[type,'種別'],[addr,'所在地'],[price,'販売価格'],[land,'土地面積'],[build,'建物面積'],[year,'築年月'],[madori,'間取り'],[yoto,'用途地域'],[ratio,'建蔽率/容積率']].filter(([v])=>v).map(([v,l])=>`<tr style="border-bottom:1px solid var(--border);"><th style="padding:5px 10px;background:var(--bg);text-align:left;font-weight:600;color:var(--hint);width:28%;font-size:11px;">${l}</th><td style="padding:5px 10px;">${v}</td></tr>`).join('')}
-        </table>
-      </div>`;
-  }catch(e){
-    document.getElementById('flyer-output').innerHTML=`<div class="spin-wrap"><div style="color:#c0392b;font-size:13px;">エラー：${e.message}</div></div>`;
-  }
-}
 
 // ══ AI チャット ══════════════════════════════════════
 function restoreChat(){
@@ -2799,214 +2585,6 @@ ${mortLines}
 document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{ initTplLands(); initSellerOwnerRows(); },100);});
 
 
-
-// ══ Dropboxファイルページ ══════════════════════════════
-async function loadDbxFilePage(){
-  const folder = document.getElementById('dbxf-folder').value.trim()||'/tento-fudosan/files';
-  const listEl = document.getElementById('dbxf-list');
-  const itemsEl = document.getElementById('dbxf-items');
-  const titleEl = document.getElementById('dbxf-list-title');
-  listEl.style.display='block';
-  itemsEl.innerHTML='<div style="font-size:12px;color:var(--sub);padding:8px;">読み込み中...</div>';
-  const files = await dbxListFiles(folder);
-  titleEl.textContent = folder+' （'+files.length+'件）';
-  if(!files.length){
-    itemsEl.innerHTML='<div style="font-size:12px;color:var(--hint);padding:8px;">ファイルが見つかりません。フォルダパスを確認してください。</div>';
-    return;
-  }
-  const apiKey = localStorage.getItem('fud_api')||'';
-  itemsEl.innerHTML = files.map(f=>{
-    const isPdf = f.name.toLowerCase().endsWith('.pdf');
-    const isXlsx = f.name.toLowerCase().endsWith('.xlsx');
-    const sizekb = (f.size/1024).toFixed(0);
-    const icon = isPdf?'📄':isXlsx?'📊':'📁';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid var(--border);">
-      <span style="font-size:18px;">${icon}</span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</div>
-        <div style="font-size:10px;color:var(--hint);">${sizekb}KB　${f.client_modified?f.client_modified.slice(0,10):''}</div>
-      </div>
-      <div style="display:flex;gap:5px;flex-shrink:0;">
-        ${isPdf?`<button onclick="dbxAnalyzePdf('${f.path_lower.replace(/'/g,"\'")}','${f.name.replace(/'/g,"\'")}',this)" style="font-size:11px;padding:4px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;">解析</button>`:''}
-        ${isPdf&&apiKey?`<button onclick="dbxReadWithAI('${f.path_lower.replace(/'/g,"\'")}','${f.name.replace(/'/g,"\'")}',this)" style="font-size:11px;padding:4px 10px;background:#27500A;color:#fff;border:none;border-radius:4px;cursor:pointer;">AI読込</button>`:''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function dbxAnalyzePdf(path, name, btn){
-  btn.disabled=true; btn.textContent='読込中...';
-  const b64 = await dbxDownloadFile(path);
-  if(!b64){showToast('ダウンロード失敗',true);btn.disabled=false;btn.textContent='解析';return;}
-  // 登記簿解析タブに渡す
-  const mockFile = new File([Uint8Array.from(atob(b64),c=>c.charCodeAt(0))], name, {type:'application/pdf'});
-  pdfFiles.push(mockFile);
-  renderSidebar('registry');
-  showToast(name+' を登記簿解析に追加しました');
-  btn.disabled=false; btn.textContent='解析';
-  showPage('registry', document.querySelectorAll('.nav-btn')[1]);
-}
-
-async function dbxReadWithAI(path, name, btn){
-  const apiKey = localStorage.getItem('fud_api')||'';
-  if(!apiKey.startsWith('sk-')){showToast('APIキーを設定してください',true);return;}
-  btn.disabled=true; btn.textContent='解析中...';
-  const b64 = await dbxDownloadFile(path);
-  if(!b64){showToast('ダウンロード失敗',true);btn.disabled=false;btn.textContent='AI読込';return;}
-  document.getElementById('dbxf-preview').style.display='block';
-  document.getElementById('dbxf-result').innerHTML='<div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);">'+name+' をAIで解析中...</div></div>';
-  const prompt=`このPDFファイルの内容を要約してください。不動産関連資料（謄本・都市計画資料・管理規約・重要事項調査報告書など）の場合は以下の観点でまとめてください：\n・物件の基本情報（所在・面積・用途など）\n・権利関係（所有者・抵当権など）\n・都市計画上の制限\n・管理状況（マンションの場合）\n・特記すべき事項\n\n読み取れた情報を構造化してわかりやすく整理してください。`;
-  try{
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:MODEL,max_tokens:2500,messages:[{role:'user',content:[
-        {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
-        {type:'text',text:prompt}
-      ]}]})
-    });
-    const data = await res.json();
-    const text = data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    document.getElementById('dbxf-result').innerHTML=`
-      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">📄 ${name}</div>
-      <div style="font-size:13px;line-height:1.8;white-space:pre-wrap;">${text}</div>
-      <div style="margin-top:12px;display:flex;gap:8px;">
-        <button class="obtn" onclick="navigator.clipboard.writeText(document.getElementById('dbxf-result').innerText).then(()=>showToast('コピーしました'))">コピー</button>
-        <button class="obtn" onclick="document.getElementById('jt-toki').value+=\n${text.replace(/'/g,"\'")}\n;showPage('jutaku',document.querySelectorAll('.nav-btn')[2]);showToast('重要事項説明書に引用しました')">重要事項に引用</button>
-      </div>`;
-  }catch(e){
-    document.getElementById('dbxf-result').innerHTML='<div style="color:#c0392b;font-size:13px;">エラー: '+e.message+'</div>';
-  }
-  btn.disabled=false; btn.textContent='AI読込';
-}
-
-
-
-// ══ フォルダドロップ読込 ══════════════════════════════
-let loadedFiles = [];
-
-function onFolderDrop(e){
-  e.preventDefault();
-  document.getElementById('folder-drop-zone').classList.remove('drag');
-  const items = e.dataTransfer.items;
-  const files = [];
-  for(let i=0;i<items.length;i++){
-    const entry = items[i].webkitGetAsEntry ? items[i].webkitGetAsEntry() : null;
-    if(entry) readEntry(entry, files);
-  }
-  // フォールバック：items未対応
-  if(!items || items.length===0){
-    const fs = e.dataTransfer.files;
-    for(let i=0;i<fs.length;i++) if(fs[i].name.toLowerCase().endsWith('.pdf')) files.push(fs[i]);
-  }
-  setTimeout(()=>addLoadedFiles(files), 500);
-}
-
-function readEntry(entry, files){
-  if(entry.isFile){
-    entry.file(f=>{ if(f.name.toLowerCase().endsWith('.pdf')) files.push(f); });
-  } else if(entry.isDirectory){
-    const reader = entry.createReader();
-    reader.readEntries(entries=>entries.forEach(e=>readEntry(e,files)));
-  }
-}
-
-function onFolderSelected(e){
-  const files = [...e.target.files].filter(f=>f.name.toLowerCase().endsWith('.pdf'));
-  addLoadedFiles(files);
-}
-
-function addLoadedFiles(files){
-  if(!files.length){showToast('PDFファイルが見つかりませんでした',true);return;}
-  loadedFiles = [...loadedFiles, ...files];
-  // 重複除去
-  const seen = new Set();
-  loadedFiles = loadedFiles.filter(f=>{ const k=f.name+f.size; if(seen.has(k))return false; seen.add(k);return true; });
-  renderLoadedFiles();
-  showToast(files.length+'件のPDFを読み込みました');
-}
-
-function renderLoadedFiles(){
-  const card = document.getElementById('loaded-files-card');
-  const list = document.getElementById('loaded-files-list');
-  const badge = document.getElementById('folder-badge');
-  if(!loadedFiles.length){ card.style.display='none'; badge.textContent=''; return; }
-  card.style.display='block';
-  badge.textContent = loadedFiles.length+'件のPDFを読み込み済み';
-  list.innerHTML = loadedFiles.map((f,i)=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--border);font-size:12px;">
-      <span style="font-size:16px;">📄</span>
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</span>
-      <span style="font-size:10px;color:var(--hint);">${(f.size/1024).toFixed(0)}KB</span>
-      <button onclick="removeSingleFile(${i})" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:14px;">×</button>
-    </div>`).join('');
-}
-
-function removeSingleFile(i){
-  loadedFiles.splice(i,1);
-  renderLoadedFiles();
-}
-
-function clearLoadedFiles(){
-  loadedFiles = [];
-  renderLoadedFiles();
-  document.getElementById('folder-input').value='';
-}
-
-async function analyzeAllLoaded(){
-  if(!loadedFiles.length){showToast('ファイルを先に読み込んでください',true);return;}
-  // 登記簿解析タブにファイルを渡して一括解析
-  pdfFiles = [...loadedFiles];
-  renderSidebar('registry');
-  showPage('registry', document.querySelectorAll('.nav-btn')[1]);
-  showToast(loadedFiles.length+'件を登記簿解析タブに送りました。「一括解析」を押してください。');
-}
-
-async function aiReadAllLoaded(){
-  const apiKey = localStorage.getItem('fud_api')||'';
-  if(!apiKey.startsWith('sk-')){showToast('APIキーを設定してください',true);return;}
-  if(!loadedFiles.length){showToast('ファイルを先に読み込んでください',true);return;}
-  const preview = document.getElementById('dbxf-preview');
-  const result = document.getElementById('dbxf-result');
-  preview.style.display='block';
-  result.innerHTML='<div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);">'+loadedFiles.length+'件をAIで解析中...</div></div>';
-
-  const results = [];
-  for(const file of loadedFiles){
-    try{
-      const b64 = await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
-      const res = await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body:JSON.stringify({model:MODEL,max_tokens:1500,messages:[{role:'user',content:[
-          {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
-          {type:'text',text:'このPDFの内容を不動産業務の観点から要約してください。物件情報・権利関係・制限事項・管理状況など重要な点を箇条書きで整理してください。'}
-        ]}]})
-      });
-      const data = await res.json();
-      const text = data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-      results.push({name:file.name, text, ok:true});
-    }catch(e){
-      results.push({name:file.name, text:e.message, ok:false});
-    }
-  }
-
-  result.innerHTML = results.map(r=>`
-    <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
-      <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:${r.ok?'var(--accent)':'#c0392b'};">
-        ${r.ok?'📄':'❌'} ${r.name}
-      </div>
-      <div style="font-size:12px;line-height:1.8;white-space:pre-wrap;">${r.text}</div>
-      ${r.ok?`<button class="obtn" style="margin-top:6px;font-size:11px;" onclick="appendToJutaku('${r.name.replace(/'/g,"\'")}','${r.text.replace(/'/g,"\'").replace(/\n/g,'\\n').slice(0,500)}')">重要事項に引用</button>`:''}
-    </div>`).join('');
-}
-
-function appendToJutaku(name, text){
-  const el = document.getElementById('jt-toki');
-  if(el) el.value += (el.value?'\n\n':'') + '【'+name+'】\n'+text;
-  showPage('jutaku', document.querySelectorAll('.nav-btn')[2]);
-  showToast(name+' を重要事項に引用しました');
-}
 
 
 
@@ -4327,250 +3905,6 @@ function updateStaffNameDisplay(){
   if(input && name) input.value = name;
 }
 
-let _dashboardData = [];
-
-async function loadDashboard(){
-  updateStaffNameDisplay();
-  const listEl = document.getElementById('db-work-list');
-  const chatEl = document.getElementById('db-chat-list');
-  if(listEl) listEl.innerHTML = '<div style="text-align:center;color:var(--sub);padding:20px;">読込中...</div>';
-
-  // 作業履歴取得（最新100件）
-  const works = await sbSelect('work_history', 'limit=100');
-  _dashboardData = works;
-
-  // チャット履歴取得（最新50件・roleがuserのみ）
-  const chats = await sbSelect('chat_history', 'role=eq.user&limit=50');
-
-  // サマリー更新
-  const today = new Date().toLocaleDateString('ja-JP');
-  const todayWorks = works.filter(w => new Date(w.created_at).toLocaleDateString('ja-JP') === today);
-  const staffSet = new Set(works.map(w => w.staff_name).filter(Boolean));
-
-  document.getElementById('db-total-works').textContent = works.length;
-  document.getElementById('db-today-works').textContent = todayWorks.length;
-  document.getElementById('db-total-staff').textContent = staffSet.size;
-  document.getElementById('db-total-chat').textContent = chats.length;
-
-  // 担当者フィルター更新
-  const filterSel = document.getElementById('db-filter-staff');
-  if(filterSel){
-    const currentVal = filterSel.value;
-    filterSel.innerHTML = '<option value="">全員</option>';
-    [...staffSet].sort().forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name; opt.textContent = name;
-      if(name === currentVal) opt.selected = true;
-      filterSel.appendChild(opt);
-    });
-  }
-
-  renderWorkList(works);
-
-  // チャット履歴表示
-  if(chatEl){
-    if(chats.length === 0){
-      chatEl.innerHTML = '<div style="text-align:center;color:var(--hint);padding:20px;">チャット履歴はまだありません</div>';
-    } else {
-      chatEl.innerHTML = chats.map(c => {
-        const dt = new Date(c.created_at).toLocaleString('ja-JP');
-        const msg = (c.message||'').substring(0,120) + (c.message?.length > 120 ? '...' : '');
-        return `<div style="border-bottom:1px solid var(--border);padding:8px 0;">
-          <div style="display:flex;gap:8px;align-items:center;margin-bottom:3px;">
-            <span style="background:var(--okbg);color:var(--ok);border-radius:99px;padding:1px 8px;font-size:10px;font-weight:700;">${c.staff_name||'不明'}</span>
-            <span style="font-size:10px;color:var(--hint);">${dt}</span>
-            ${c.property_address ? `<span style="font-size:10px;color:var(--sub);">📍${c.property_address}</span>` : ''}
-          </div>
-          <div style="color:var(--text);line-height:1.6;">${msg}</div>
-        </div>`;
-      }).join('');
-    }
-  }
-}
-
-function renderWorkList(works){
-  const listEl = document.getElementById('db-work-list');
-  if(!listEl) return;
-  if(works.length === 0){
-    listEl.innerHTML = '<div style="text-align:center;color:var(--hint);padding:20px;">作業履歴はまだありません</div>';
-    return;
-  }
-  const typeLabels = {
-    gyosei: '🔍 行政調査', toki: '📄 登記簿解析',
-    chosa: '📋 重要事項調査', template: '📝 テンプレート入力',
-    chat: '💬 チャット依頼', jusetsu: '📑 重要事項説明書作成'
-  };
-  listEl.innerHTML = works.map(w => {
-    const dt = new Date(w.created_at).toLocaleString('ja-JP');
-    const label = typeLabels[w.work_type] || w.work_type;
-    return `<div style="border-bottom:1px solid var(--border);padding:8px 0;display:flex;gap:10px;align-items:flex-start;">
-      <div style="min-width:120px;">
-        <span style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-size:10px;">${label}</span>
-      </div>
-      <div style="flex:1;">
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:2px;">
-          <span style="font-weight:600;font-size:12px;color:var(--accent);">${w.staff_name||'不明'}</span>
-          <span style="font-size:10px;color:var(--hint);">${dt}</span>
-          ${w.property_address ? `<span style="font-size:10px;color:var(--sub);">📍${w.property_address}</span>` : ''}
-        </div>
-        <div style="color:var(--sub);font-size:11px;">${w.summary||''}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function filterDashboard(){
-  const staff = document.getElementById('db-filter-staff')?.value;
-  const filtered = staff ? _dashboardData.filter(w => w.staff_name === staff) : _dashboardData;
-  renderWorkList(filtered);
-}
-
-// ══ 売主・所有者 複数管理 ══════════════════════════════
-let sellerCount = 0;
-let ownerCount = 0;
-
-function initSellerOwnerRows(){
-  sellerCount = 0; ownerCount = 0;
-  document.getElementById('tpl-sellers-wrap').innerHTML = '';
-  document.getElementById('tpl-owners-wrap').innerHTML = '';
-  addSellerRow();
-  addOwnerRow();
-}
-
-function addSellerRow(name='', address=''){
-  const i = sellerCount;
-  const wrap = document.getElementById('tpl-sellers-wrap');
-  const div = document.createElement('div');
-  div.id = `tpl-seller-row-${i}`;
-  div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;';
-  div.innerHTML = `
-    <div class="fi"><input type="text" id="tpl-seller-${i}" placeholder="田中 花子" value="${name.replace(/"/g,'&quot;')}" style="width:100%;"/></div>
-    <div class="fi"><input type="text" id="tpl-seller-addr-${i}" placeholder="住所" value="${address.replace(/"/g,'&quot;')}" style="width:100%;"/></div>
-    <button onclick="removeSellerRow(${i})" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:16px;padding:0 4px;" title="削除">×</button>`;
-  wrap.appendChild(div);
-  sellerCount++;
-}
-
-function removeSellerRow(i){
-  const el = document.getElementById(`tpl-seller-row-${i}`);
-  if(el) el.remove();
-}
-
-function addOwnerRow(name='', share=''){
-  const i = ownerCount;
-  const wrap = document.getElementById('tpl-owners-wrap');
-  const div = document.createElement('div');
-  div.id = `tpl-owner-row-${i}`;
-  div.style.cssText = 'display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;';
-  div.innerHTML = `
-    <div class="fi"><input type="text" id="tpl-owner-${i}" placeholder="田中 花子" value="${name.replace(/"/g,'&quot;')}" style="width:100%;"/></div>
-    <div class="fi"><input type="text" id="tpl-owner-share-${i}" placeholder="持分（全部など）" value="${share.replace(/"/g,'&quot;')}" style="width:110px;"/></div>
-    <button onclick="removeOwnerRow(${i})" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:16px;padding:0 4px;" title="削除">×</button>`;
-  wrap.appendChild(div);
-  ownerCount++;
-}
-
-function removeOwnerRow(i){
-  const el = document.getElementById(`tpl-owner-row-${i}`);
-  if(el) el.remove();
-}
-
-// 売主・所有者の一覧を取得
-function getSellers(){
-  const sellers = [];
-  for(let i=0; i<sellerCount; i++){
-    const nameEl = document.getElementById(`tpl-seller-${i}`);
-    const addrEl = document.getElementById(`tpl-seller-addr-${i}`);
-    if(nameEl && nameEl.value.trim()){
-      sellers.push({ name: nameEl.value.trim(), address: addrEl?.value.trim()||'' });
-    }
-  }
-  return sellers;
-}
-
-function getOwners(){
-  const owners = [];
-  for(let i=0; i<ownerCount; i++){
-    const nameEl = document.getElementById(`tpl-owner-${i}`);
-    const shareEl = document.getElementById(`tpl-owner-share-${i}`);
-    if(nameEl && nameEl.value.trim()){
-      owners.push({ name: nameEl.value.trim(), share: shareEl?.value.trim()||'' });
-    }
-  }
-  return owners;
-}
-
-// ══ 所有者選択ピッカー ══════════════════════════════
-let _ownerPickerTarget = ''; // 'seller' or 'owner'
-
-function openOwnerPicker(target){
-  _ownerPickerTarget = target;
-  const titleEl = document.getElementById('owner-picker-title');
-  const listEl  = document.getElementById('owner-picker-list');
-  titleEl.textContent = target === 'seller' ? '売主を謄本の所有者から追加' : '所有者を謄本から追加';
-
-  // 全履歴から所有者を収集
-  const ownerMap = new Map();
-  let hist = [];
-  try{ hist = JSON.parse(localStorage.getItem('fud_rhist')||'[]'); }catch(e){}
-  hist.forEach(h => {
-    (h.results||[]).filter(r=>r.ok).forEach(r => {
-      const d = r.data;
-      // 土地の所有者
-      (d.owner||[]).forEach(o => {
-        if(o.name) ownerMap.set(o.name+o.address, { name:o.name, address:o.address||'', share:o.share||'', source:'土地謄本', file:r.file||'', date:h.date||'' });
-      });
-      // 建物の所有者
-      const b = d.building||{};
-      (b.owner||[]).forEach(o => {
-        if(o.name) ownerMap.set(o.name+o.address, { name:o.name, address:o.address||'', share:o.share||'', source:'建物謄本', file:r.file||'', date:h.date||'' });
-      });
-      // _landsの所有者
-      (d._lands||[]).forEach(land => {
-        (land.owner||[]).forEach(o => {
-          if(o.name) ownerMap.set(o.name+o.address, { name:o.name, address:o.address||'', share:o.share||'', source:'土地謄本', file:r.file||'', date:h.date||'' });
-        });
-      });
-    });
-  });
-  // 現在の解析結果も追加
-  regResults.filter(r=>r.ok).forEach(r => {
-    const d = r.data;
-    (d.owner||[]).forEach(o => {
-      if(o.name) ownerMap.set(o.name+o.address, { name:o.name, address:o.address||'', share:o.share||'', source:'土地謄本（現在）', file:r.file||'', date:'' });
-    });
-    const b = d.building||{};
-    (b.owner||[]).forEach(o => {
-      if(o.name) ownerMap.set(o.name+o.address, { name:o.name, address:o.address||'', share:o.share||'', source:'建物謄本（現在）', file:r.file||'', date:'' });
-    });
-  });
-
-  if(ownerMap.size === 0){
-    listEl.innerHTML = '<div class="empty">登記簿解析の履歴がありません。先に謄本を解析してください。</div>';
-  } else {
-    listEl.innerHTML = [...ownerMap.values()].map(o => `
-      <div class="hist-item" onclick="applyOwnerFromPicker('${o.name.replace(/'/g,"\\'")}','${o.address.replace(/'/g,"\\'")}','${o.share.replace(/'/g,"\\'")}')">
-        <div class="hist-main">
-          <div class="hist-addr">${o.name}${o.share?' <span style="font-size:10px;color:var(--sub);">('+o.share+')</span>':''}</div>
-          <div class="hist-sub">${o.address||'住所不明'}</div>
-          <div class="hist-sub" style="color:var(--hint);">${o.source} / ${o.file} ${o.date}</div>
-        </div>
-        <button class="obtn" style="font-size:11px;padding:3px 10px;flex-shrink:0;">追加</button>
-      </div>`).join('');
-  }
-  document.getElementById('owner-picker-modal').classList.add('open');
-}
-
-function applyOwnerFromPicker(name, address, share){
-  if(_ownerPickerTarget === 'seller'){
-    addSellerRow(name, address);
-    showToast('売主を追加しました：' + name);
-  } else {
-    addOwnerRow(name, share);
-    showToast('所有者を追加しました：' + name);
-  }
-  closeModal('owner-picker-modal');
-}
 
 function toggleChosaHistory(){
   const el = document.getElementById('chosa-history-list');
