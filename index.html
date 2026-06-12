@@ -486,22 +486,29 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
             </div>
             <div class="form-grid" style="margin-bottom:10px;">
               <div class="form-group"><div class="form-label">買主名 *</div><div class="fi"><input type="text" id="tpl-buyer" placeholder="山田 太郎"/></div></div>
-              <div class="form-group">
+
+              <!-- 売主（複数対応） -->
+              <div class="form-group" style="grid-column:1/-1;">
                 <div class="form-label" style="display:flex;justify-content:space-between;align-items:center;">
-                  売主名 *
-                  <button onclick="openOwnerPicker('seller')" style="font-size:10px;padding:2px 8px;background:var(--alight);border:1px solid var(--amid);color:var(--accent);border-radius:99px;cursor:pointer;">📄 謄本から選択</button>
+                  売主名 *（複数可）
+                  <button onclick="openOwnerPicker('seller')" style="font-size:10px;padding:2px 8px;background:var(--alight);border:1px solid var(--amid);color:var(--accent);border-radius:99px;cursor:pointer;">📄 謄本から追加</button>
                 </div>
-                <div class="fi"><input type="text" id="tpl-seller" placeholder="田中 花子"/></div>
+                <!-- 売主リスト -->
+                <div id="tpl-sellers-wrap" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px;"></div>
+                <button onclick="addSellerRow()" style="font-size:11px;padding:4px 12px;border:1px solid var(--border2);border-radius:99px;background:var(--surface);color:var(--sub);cursor:pointer;">＋ 売主を追加</button>
               </div>
-              <div class="form-group"><div class="form-label">売主住所</div><div class="fi"><input type="text" id="tpl-seller-addr" placeholder="東京都○○区…"/></div></div>
+
               <div class="form-group"><div class="form-label">売買代金（円）</div><div class="fi"><input type="number" id="tpl-price" placeholder="55000000"/></div></div>
               <div class="form-group"><div class="form-label">手付金（円）</div><div class="fi"><input type="number" id="tpl-tesuke" placeholder="5000000"/></div></div>
-              <div class="form-group">
+
+              <!-- 所有者（複数対応） -->
+              <div class="form-group" style="grid-column:1/-1;">
                 <div class="form-label" style="display:flex;justify-content:space-between;align-items:center;">
-                  所有者氏名
-                  <button onclick="openOwnerPicker('owner')" style="font-size:10px;padding:2px 8px;background:var(--alight);border:1px solid var(--amid);color:var(--accent);border-radius:99px;cursor:pointer;">📄 謄本から選択</button>
+                  所有者氏名（複数可）
+                  <button onclick="openOwnerPicker('owner')" style="font-size:10px;padding:2px 8px;background:var(--alight);border:1px solid var(--amid);color:var(--accent);border-radius:99px;cursor:pointer;">📄 謄本から追加</button>
                 </div>
-                <div class="fi"><input type="text" id="tpl-owner-name" placeholder="田中 花子"/></div>
+                <div id="tpl-owners-wrap" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px;"></div>
+                <button onclick="addOwnerRow()" style="font-size:11px;padding:4px 12px;border:1px solid var(--border2);border-radius:99px;background:var(--surface);color:var(--sub);cursor:pointer;">＋ 所有者を追加</button>
               </div>
               <!-- 宅地建物取引士 -->
               <div class="form-group" style="grid-column:1/-1;">
@@ -2520,12 +2527,17 @@ function getTplData(){
     if(addr||chiban)lands.push({address:addr,chiban,chime,chiseki});
   }
   const cv=document.getElementById('tpl-chiku').value;
+  const sellers = getSellers();
+  const owners  = getOwners();
   return {
     buyer_name:document.getElementById('tpl-buyer').value,
-    seller_name:document.getElementById('tpl-seller').value,
-    seller_address:document.getElementById('tpl-seller-addr').value,
-    owner_name:document.getElementById('tpl-owner-name').value,
-    owner_address:document.getElementById('tpl-seller-addr').value,
+    // 後方互換のため先頭の売主をseller_nameにも入れる
+    seller_name:  sellers.map(s=>s.name).join('・'),
+    seller_address:sellers[0]?.address||'',
+    sellers,  // 複数売主
+    owner_name:   owners.map(o=>(o.share?o.share+' ':'')+o.name).join('・'),
+    owner_address: '',
+    owners,   // 複数所有者
     takkenshi_name: document.getElementById('tpl-takkenshi-name')?.value||'',
     takkenshi_no:   document.getElementById('tpl-takkenshi-no')?.value||'',
     takkenshi_ken:  document.getElementById('tpl-takkenshi-ken')?.value||'',
@@ -2643,9 +2655,8 @@ function sendTplToChat(){
 
 【基本情報】
 買主: ${data.buyer_name||'未入力'}
-売主: ${data.seller_name||'未入力'}
-売主住所: ${data.seller_address||'未入力'}
-所有者: ${data.owner_name||'未入力'}
+売主: ${(data.sellers&&data.sellers.length)?data.sellers.map((s,i)=>`${i+1}. ${s.name}（${s.address||'住所不明'}）`).join('\n      '):(data.seller_name||'未入力')}
+所有者: ${(data.owners&&data.owners.length)?data.owners.map(o=>(o.share?o.share+' ':'')+o.name).join('・'):(data.owner_name||'未入力')}
 売買代金: ${data.price?Number(data.price).toLocaleString()+'円':'未入力'}
 手付金: ${data.tesuke?Number(data.tesuke).toLocaleString()+'円':'未入力'}
 ${data.takkenshi_name?`説明をする宅地建物取引士: ${data.takkenshi_name}　（${data.takkenshi_ken||'東京'}）第 ${data.takkenshi_no} 号`:''}
@@ -2766,7 +2777,7 @@ ${mortLines}
 }
 
 // ページ表示時に初期化
-document.addEventListener('DOMContentLoaded',()=>{setTimeout(initTplLands,100);});
+document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{ initTplLands(); initSellerOwnerRows(); },100);});
 
 
 
@@ -3673,8 +3684,8 @@ function applyTakkenshi(){
 function clearAllTplFields(){
   if(!confirm('テンプレート入力欄の内容を全てクリアしますか？')) return;
   const ids = [
-    'tpl-buyer','tpl-seller','tpl-seller-addr','tpl-price','tpl-tesuke',
-    'tpl-owner-name','tpl-takkenshi-name','tpl-takkenshi-no','tpl-takkenshi-ken',
+    'tpl-buyer','tpl-price','tpl-tesuke',
+    'tpl-takkenshi-name','tpl-takkenshi-no','tpl-takkenshi-ken',
     'tpl-yoto','tpl-kenpei','tpl-yoseki','tpl-bouka','tpl-kodo','tpl-tikku',
     'tpl-itto-name','tpl-itto-address','tpl-itto-kozo','tpl-nobeyuka',
     'tpl-kaoku-no','tpl-tatemono-name','tpl-shurui','tpl-senyu-kozo',
@@ -3685,17 +3696,15 @@ function clearAllTplFields(){
     'tpl-mansion-name','tpl-room-no','tpl-senyu-area','tpl-balcony',
     'tpl-takkenshi',
   ];
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.value = '';
-  });
+  ids.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   // 土地行をリセット
   document.getElementById('tpl-lands-wrap').innerHTML = '';
   tplLandCount = 0;
   addTplLandRow();
+  // 売主・所有者をリセット
+  initSellerOwnerRows();
   // 抵当権セクションを非表示
   document.getElementById('tpl-mortgage-section').style.display = 'none';
-  // sessionStorageの建物データもクリア
   try{ sessionStorage.removeItem('fud_building_data'); }catch(e){}
   showToast('テンプレート入力を全クリアしました');
 }
@@ -3790,15 +3799,24 @@ async function geocodeAddress(address){
 
 // Overpass APIで周辺施設を検索
 async function searchNearby(lat, lon, amenityTags, radius=800){
-  const tagQuery = amenityTags.map(t => `node["amenity"="${t}"](around:${radius},${lat},${lon});`).join('');
+  const tagQuery = amenityTags.filter(t=>!t.startsWith('shop:')).map(t => `node["amenity"="${t}"](around:${radius},${lat},${lon});`).join('');
   const shopQuery = amenityTags.filter(t=>t.startsWith('shop:')).map(t=>`node["shop"="${t.replace('shop:','')}"](around:${radius},${lat},${lon});`).join('');
   const railwayQuery = amenityTags.includes('station') ? `node["railway"="station"](around:1200,${lat},${lon});node["railway"="subway_entrance"](around:1200,${lat},${lon});` : '';
   const query = `[out:json][timeout:25];(${tagQuery}${shopQuery}${railwayQuery});out body;`;
-  const res = await fetch('https://overpass-api.de/api/interpreter', {
-    method:'POST', body: 'data=' + encodeURIComponent(query)
-  });
-  const data = await res.json();
-  return data.elements || [];
+  try{
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method:'POST', body: 'data=' + encodeURIComponent(query)
+    });
+    if(!res.ok) return [];
+    const text = await res.text();
+    // HTMLが返ってきた場合（エラーページ）は空配列を返す
+    if(text.trim().startsWith('<')) return [];
+    const data = JSON.parse(text);
+    return data.elements || [];
+  }catch(e){
+    console.warn('Overpass API error:', e.message);
+    return [];
+  }
 }
 
 // 2点間の距離計算（メートル）
@@ -4107,6 +4125,81 @@ function filterDashboard(){
   renderWorkList(filtered);
 }
 
+// ══ 売主・所有者 複数管理 ══════════════════════════════
+let sellerCount = 0;
+let ownerCount = 0;
+
+function initSellerOwnerRows(){
+  sellerCount = 0; ownerCount = 0;
+  document.getElementById('tpl-sellers-wrap').innerHTML = '';
+  document.getElementById('tpl-owners-wrap').innerHTML = '';
+  addSellerRow();
+  addOwnerRow();
+}
+
+function addSellerRow(name='', address=''){
+  const i = sellerCount;
+  const wrap = document.getElementById('tpl-sellers-wrap');
+  const div = document.createElement('div');
+  div.id = `tpl-seller-row-${i}`;
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;';
+  div.innerHTML = `
+    <div class="fi"><input type="text" id="tpl-seller-${i}" placeholder="田中 花子" value="${name.replace(/"/g,'&quot;')}" style="width:100%;"/></div>
+    <div class="fi"><input type="text" id="tpl-seller-addr-${i}" placeholder="住所" value="${address.replace(/"/g,'&quot;')}" style="width:100%;"/></div>
+    <button onclick="removeSellerRow(${i})" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:16px;padding:0 4px;" title="削除">×</button>`;
+  wrap.appendChild(div);
+  sellerCount++;
+}
+
+function removeSellerRow(i){
+  const el = document.getElementById(`tpl-seller-row-${i}`);
+  if(el) el.remove();
+}
+
+function addOwnerRow(name='', share=''){
+  const i = ownerCount;
+  const wrap = document.getElementById('tpl-owners-wrap');
+  const div = document.createElement('div');
+  div.id = `tpl-owner-row-${i}`;
+  div.style.cssText = 'display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;';
+  div.innerHTML = `
+    <div class="fi"><input type="text" id="tpl-owner-${i}" placeholder="田中 花子" value="${name.replace(/"/g,'&quot;')}" style="width:100%;"/></div>
+    <div class="fi"><input type="text" id="tpl-owner-share-${i}" placeholder="持分（全部など）" value="${share.replace(/"/g,'&quot;')}" style="width:110px;"/></div>
+    <button onclick="removeOwnerRow(${i})" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:16px;padding:0 4px;" title="削除">×</button>`;
+  wrap.appendChild(div);
+  ownerCount++;
+}
+
+function removeOwnerRow(i){
+  const el = document.getElementById(`tpl-owner-row-${i}`);
+  if(el) el.remove();
+}
+
+// 売主・所有者の一覧を取得
+function getSellers(){
+  const sellers = [];
+  for(let i=0; i<sellerCount; i++){
+    const nameEl = document.getElementById(`tpl-seller-${i}`);
+    const addrEl = document.getElementById(`tpl-seller-addr-${i}`);
+    if(nameEl && nameEl.value.trim()){
+      sellers.push({ name: nameEl.value.trim(), address: addrEl?.value.trim()||'' });
+    }
+  }
+  return sellers;
+}
+
+function getOwners(){
+  const owners = [];
+  for(let i=0; i<ownerCount; i++){
+    const nameEl = document.getElementById(`tpl-owner-${i}`);
+    const shareEl = document.getElementById(`tpl-owner-share-${i}`);
+    if(nameEl && nameEl.value.trim()){
+      owners.push({ name: nameEl.value.trim(), share: shareEl?.value.trim()||'' });
+    }
+  }
+  return owners;
+}
+
 // ══ 所有者選択ピッカー ══════════════════════════════
 let _ownerPickerTarget = ''; // 'seller' or 'owner'
 
@@ -4114,42 +4207,41 @@ function openOwnerPicker(target){
   _ownerPickerTarget = target;
   const titleEl = document.getElementById('owner-picker-title');
   const listEl  = document.getElementById('owner-picker-list');
-  titleEl.textContent = target === 'seller' ? '売主名を選択（謄本の所有者から）' : '所有者氏名を選択';
-
-  let hist = [];
-  try{ hist = JSON.parse(localStorage.getItem('fud_rhist')||'[]'); }catch(e){}
+  titleEl.textContent = target === 'seller' ? '売主を謄本の所有者から追加' : '所有者を謄本から追加';
 
   // 全履歴から所有者を収集
-  const ownerMap = new Map(); // name → {name, address, share, source}
+  const ownerMap = new Map();
+  let hist = [];
+  try{ hist = JSON.parse(localStorage.getItem('fud_rhist')||'[]'); }catch(e){}
   hist.forEach(h => {
     (h.results||[]).filter(r=>r.ok).forEach(r => {
       const d = r.data;
+      // 土地の所有者
       (d.owner||[]).forEach(o => {
-        if(o.name && !ownerMap.has(o.name)){
-          ownerMap.set(o.name, {
-            name: o.name,
-            address: o.address||'',
-            share: o.share||'',
-            source: r.file||'',
-            date: h.date||''
-          });
-        }
+        if(o.name) ownerMap.set(o.name+o.address, { name:o.name, address:o.address||'', share:o.share||'', source:'土地謄本', file:r.file||'', date:h.date||'' });
+      });
+      // 建物の所有者
+      const b = d.building||{};
+      (b.owner||[]).forEach(o => {
+        if(o.name) ownerMap.set(o.name+o.address, { name:o.name, address:o.address||'', share:o.share||'', source:'建物謄本', file:r.file||'', date:h.date||'' });
+      });
+      // _landsの所有者
+      (d._lands||[]).forEach(land => {
+        (land.owner||[]).forEach(o => {
+          if(o.name) ownerMap.set(o.name+o.address, { name:o.name, address:o.address||'', share:o.share||'', source:'土地謄本', file:r.file||'', date:h.date||'' });
+        });
       });
     });
   });
-
   // 現在の解析結果も追加
   regResults.filter(r=>r.ok).forEach(r => {
-    (r.data.owner||[]).forEach(o => {
-      if(o.name && !ownerMap.has(o.name)){
-        ownerMap.set(o.name, {
-          name: o.name,
-          address: o.address||'',
-          share: o.share||'',
-          source: r.file||'',
-          date: '現在の解析結果'
-        });
-      }
+    const d = r.data;
+    (d.owner||[]).forEach(o => {
+      if(o.name) ownerMap.set(o.name+o.address, { name:o.name, address:o.address||'', share:o.share||'', source:'土地謄本（現在）', file:r.file||'', date:'' });
+    });
+    const b = d.building||{};
+    (b.owner||[]).forEach(o => {
+      if(o.name) ownerMap.set(o.name+o.address, { name:o.name, address:o.address||'', share:o.share||'', source:'建物謄本（現在）', file:r.file||'', date:'' });
     });
   });
 
@@ -4157,30 +4249,25 @@ function openOwnerPicker(target){
     listEl.innerHTML = '<div class="empty">登記簿解析の履歴がありません。先に謄本を解析してください。</div>';
   } else {
     listEl.innerHTML = [...ownerMap.values()].map(o => `
-      <div class="hist-item" onclick="applyOwner('${o.name.replace(/'/g,"\\'")}','${o.address.replace(/'/g,"\\'")}')">
+      <div class="hist-item" onclick="applyOwnerFromPicker('${o.name.replace(/'/g,"\\'")}','${o.address.replace(/'/g,"\\'")}','${o.share.replace(/'/g,"\\'")}')">
         <div class="hist-main">
-          <div class="hist-addr">${o.name}${o.share?' ('+o.share+')':''}</div>
+          <div class="hist-addr">${o.name}${o.share?' <span style="font-size:10px;color:var(--sub);">('+o.share+')</span>':''}</div>
           <div class="hist-sub">${o.address||'住所不明'}</div>
-          <div class="hist-sub" style="color:var(--hint);">📄 ${o.source} ${o.date}</div>
+          <div class="hist-sub" style="color:var(--hint);">${o.source} / ${o.file} ${o.date}</div>
         </div>
-        <button class="obtn" style="font-size:11px;padding:3px 10px;flex-shrink:0;">選択</button>
+        <button class="obtn" style="font-size:11px;padding:3px 10px;flex-shrink:0;">追加</button>
       </div>`).join('');
   }
-
   document.getElementById('owner-picker-modal').classList.add('open');
 }
 
-function applyOwner(name, address){
+function applyOwnerFromPicker(name, address, share){
   if(_ownerPickerTarget === 'seller'){
-    const el = document.getElementById('tpl-seller');
-    const addrEl = document.getElementById('tpl-seller-addr');
-    if(el) el.value = name;
-    if(addrEl && address) addrEl.value = address;
-    showToast('売主名を設定しました：' + name);
+    addSellerRow(name, address);
+    showToast('売主を追加しました：' + name);
   } else {
-    const el = document.getElementById('tpl-owner-name');
-    if(el) el.value = name;
-    showToast('所有者名を設定しました：' + name);
+    addOwnerRow(name, share);
+    showToast('所有者を追加しました：' + name);
   }
   closeModal('owner-picker-modal');
 }
