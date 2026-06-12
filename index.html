@@ -245,6 +245,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
     <div class="nav-btn" onclick="showPage('template',this)">📝 テンプレート入力</div>
     <div class="nav-btn" onclick="showPage('dbxfiles',this)">☁ Dropboxファイル</div>
     <div class="nav-btn" onclick="showPage('dashboard',this)" style="color:#f39c12;font-weight:700;">📊 管理ダッシュボード</div>
+    <div class="nav-btn" onclick="showPage('kankyou',this)" style="color:#27ae60;font-weight:700;">🗺 周辺環境レポート</div>
   </div>
 
   <div class="app-body">
@@ -470,7 +471,19 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
           </div>
 
           <div class="card">
-            <div class="card-title">③ 入力内容の確認・修正</div>
+            <div class="card-title">③ 入力内容の確認・修正
+              <button onclick="clearAllTplFields()" style="margin-left:12px;font-size:11px;padding:3px 10px;background:#fff3f3;border:1px solid #ffcdd2;color:#c0392b;border-radius:99px;cursor:pointer;font-weight:600;">🗑 全クリア</button>
+            </div>
+            <!-- 抵当権の反映設定 -->
+            <div id="tpl-mortgage-section" style="display:none;background:#fff8e1;border:1px solid #ffe082;border-radius:var(--r);padding:10px 14px;margin-bottom:10px;">
+              <div style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:8px;">⚠️ 抵当権が検出されました</div>
+              <div style="font-size:12px;color:var(--sub);margin-bottom:8px;">登記簿から抽出した抵当権をExcelの権利部（乙区）に反映しますか？<br><span style="font-size:11px;color:var(--hint);">※抹消済みは除外済み</span></div>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <label style="font-size:12px;cursor:pointer;"><input type="radio" name="tpl-mortgage-opt" value="yes" style="margin-right:4px;">✅ 反映する</label>
+                <label style="font-size:12px;cursor:pointer;"><input type="radio" name="tpl-mortgage-opt" value="no" checked style="margin-right:4px;">❌ 反映しない</label>
+              </div>
+              <div id="tpl-mortgage-preview" style="margin-top:8px;font-size:11px;color:var(--sub);background:var(--bg);padding:8px;border-radius:var(--r);max-height:100px;overflow-y:auto;display:none;"></div>
+            </div>
             <div class="form-grid" style="margin-bottom:10px;">
               <div class="form-group"><div class="form-label">買主名 *</div><div class="fi"><input type="text" id="tpl-buyer" placeholder="山田 太郎"/></div></div>
               <div class="form-group"><div class="form-label">売主名 *</div><div class="fi"><input type="text" id="tpl-seller" placeholder="田中 花子"/></div></div>
@@ -662,6 +675,27 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
 
       <!-- AIチャット -->
             <!-- AIチャット -->
+      <!-- 周辺環境レポートページ -->
+      <div class="page" id="page-kankyou">
+        <div style="max-width:900px;">
+          <h2 style="font-size:17px;font-weight:700;margin-bottom:4px;">🗺 周辺環境レポート</h2>
+          <p style="font-size:12px;color:var(--sub);margin-bottom:16px;">住所を入力すると周辺施設・交通・環境情報を自動取得してレポートを作成します</p>
+
+          <!-- 住所入力 -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-title">📍 対象地点の住所を入力</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <input type="text" id="kankyou-addr" placeholder="例：神奈川県川崎市宮前区白幡台二丁目3番1" style="flex:1;min-width:280px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;outline:none;"/>
+              <button class="pbtn" id="kankyou-btn" onclick="generateKankyouReport()" style="white-space:nowrap;">🔍 レポート生成</button>
+            </div>
+            <div style="margin-top:8px;font-size:11px;color:var(--hint);">※ OpenStreetMap/Nominatimを使用（無料・登録不要）</div>
+          </div>
+
+          <!-- 生成中・結果エリア -->
+          <div id="kankyou-result"></div>
+        </div>
+      </div>
+
       <div class="page" id="page-dashboard">
         <div style="max-width:960px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
@@ -1816,8 +1850,10 @@ async function analyzeRegs(){
     const addr = first.building_itto_address || first.land_address || '';
     saveWorkHistory('toki', `登記簿解析：${pdfFiles.length}件`, {count:pdfFiles.length}, addr);
   }
+  // 解析完了後にファイルリストをクリア（次回は新しいファイルのみ）
+  pdfFiles = [];
+  renderFileList();
   if(btn)btn.disabled=false;
-  renderSidebar('registry');
 }
 
 function loadRHist(i){
@@ -2158,7 +2194,14 @@ function restoreChat(){
     el.scrollTop=el.scrollHeight;
   }
 }
-function chatKeydown(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}}
+function chatKeydown(e){
+  if(e.key==='Enter' && !e.shiftKey){
+    // Enterキーのみでは送信しない（送信ボタンを使う）
+    // Shift+Enterで改行（デフォルト動作）
+    e.preventDefault(); // Enterキーの改行を防ぐが送信もしない
+    return;
+  }
+}
 function clearChat(){chatHistory=[];localStorage.setItem('fud_chat',JSON.stringify([]));document.getElementById('chat-msgs').innerHTML='<div class="msg ai">会話をクリアしました。何でもお聞きください。</div>';}
 async function sendChat(){
   const inp=document.getElementById('chat-input');
@@ -2576,6 +2619,7 @@ ${data.takkenshi_name?`説明をする宅地建物取引士: ${data.takkenshi_na
 
 【土地情報】
 ${lands.length>0?lands.map((l,i)=>(i+1)+'筆目: '+l.address+' '+l.chiban+'番 '+l.chime+' '+l.chiseki+'㎡').join('\n'):'未入力'}
+${(()=>{const info=getTotalLandInfo();return info.count>1?`合計筆数: ${info.count}筆\n合計地積: ${info.totalArea}㎡\n（※複数筆のため、Excelの敷地権の目的となる土地の合計筆数・合計地積欄に反映してください）`:''})()}
 
 【都市計画情報】
 用途地域: ${data.yoto||'未入力'}
@@ -2613,6 +2657,10 @@ ${lands.length>0?lands.map((l,i)=>(i+1)+'筆目: '+l.address+' '+l.chiban+'番 '
   if(data.takkenshi_name){
     msg += `\n\n【説明をする宅地建物取引士（Excelへの入力指示）】\n氏名: ${data.takkenshi_name}\n登録番号（数字のみ）: ${data.takkenshi_no}\n登録都道府県: ${data.takkenshi_ken||'東京'}\nExcelシート「重要事項説明書」の以下のセルに入力してください：\n・登録番号 → セルH33（H33:O34マージ先頭）に登録番号数字のみ、R33にも同じ番号\n・氏名 → セルH35（H35:V36マージ先頭）に氏名、AF35にも同じ氏名`;
   }
+
+  // 抵当権の指示を追加
+  const mortgageInstruction = getMortgageInstruction();
+  if(mortgageInstruction) msg += mortgageInstruction;
 
   // 建物情報があれば追加
   const bd = data.building||{};
@@ -3152,10 +3200,14 @@ sendChat = async function(){
 容積率：${searchResult.data.yoseki||'不明'}%`:''}`;
 
   try{
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
+    const hasPdf = chatAttachments.some(f=>f&&f.type==='pdf');
+  const reqBody2 = {model:MODEL, max_tokens:2000, system:context, messages:chatHistory.slice(-20)};
+  const reqHeaders2 = {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+  if(hasPdf){ reqHeaders2['anthropic-beta'] = 'pdfs-2024-09-25'; }
+  const res = await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body: JSON.stringify({model:MODEL, max_tokens:2000, system:context, messages:chatHistory.slice(-20)})
+      headers: reqHeaders2,
+      body: JSON.stringify(reqBody2)
     });
     if(!res.ok){const e=await res.json();throw new Error(e.error?.message||res.status);}
     const data = await res.json();
@@ -3553,6 +3605,303 @@ function applyTakkenshi(){
 
 // ══ 調査報告書履歴表示 ══════════════════════════════
 // ══ 担当者名・ダッシュボード ══════════════════════════════
+
+// ══ テンプレート入力 全クリア ══════════════════════════════
+function clearAllTplFields(){
+  if(!confirm('テンプレート入力欄の内容を全てクリアしますか？')) return;
+  const ids = [
+    'tpl-buyer','tpl-seller','tpl-seller-addr','tpl-price','tpl-tesuke',
+    'tpl-owner-name','tpl-takkenshi-name','tpl-takkenshi-no','tpl-takkenshi-ken',
+    'tpl-yoto','tpl-kenpei','tpl-yoseki','tpl-bouka','tpl-kodo','tpl-tikku',
+    'tpl-itto-name','tpl-itto-address','tpl-itto-kozo','tpl-nobeyuka',
+    'tpl-kaoku-no','tpl-tatemono-name','tpl-shurui','tpl-senyu-kozo',
+    'tpl-kai','tpl-yuka-touki','tpl-yuka-hekishin',
+    'tpl-year','tpl-month','tpl-day',
+    'tpl-kanri-fee','tpl-shuzen-fee','tpl-kanri-co','tpl-kanri-type',
+    'tpl-total-units','tpl-built-year','tpl-kanri-note','tpl-shuzen-history',
+    'tpl-mansion-name','tpl-room-no','tpl-senyu-area','tpl-balcony',
+    'tpl-takkenshi',
+  ];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  // 土地行をリセット
+  document.getElementById('tpl-lands-wrap').innerHTML = '';
+  tplLandCount = 0;
+  addTplLandRow();
+  // 抵当権セクションを非表示
+  document.getElementById('tpl-mortgage-section').style.display = 'none';
+  // sessionStorageの建物データもクリア
+  try{ sessionStorage.removeItem('fud_building_data'); }catch(e){}
+  showToast('テンプレート入力を全クリアしました');
+}
+
+// ══ 抵当権の表示・反映 ══════════════════════════════════════
+let _activeMortgages = []; // 現在の抵当権データ
+
+function updateMortgageSection(mortgages){
+  _activeMortgages = mortgages || [];
+  const sec = document.getElementById('tpl-mortgage-section');
+  const preview = document.getElementById('tpl-mortgage-preview');
+  if(!sec) return;
+  if(_activeMortgages.length === 0){
+    sec.style.display = 'none';
+    return;
+  }
+  sec.style.display = 'block';
+  // プレビュー表示
+  const lines = _activeMortgages.map((m,i) =>
+    `【${i+1}】${m.rank||''}位 ${m.type||''} 受付:${m.date||''} ${m.amount||''} 債権者:${m.creditor||''}`
+  );
+  preview.innerHTML = lines.join('<br>');
+  preview.style.display = 'block';
+  // ラジオボタンの変更イベント
+  document.querySelectorAll('input[name="tpl-mortgage-opt"]').forEach(r => {
+    r.onchange = () => { preview.style.display = r.value==='yes' ? 'block' : 'none'; };
+  });
+}
+
+// 抵当権をExcel入力指示に含めるか取得
+function getMortgageInstruction(){
+  const opt = document.querySelector('input[name="tpl-mortgage-opt"]:checked')?.value;
+  if(opt !== 'yes' || _activeMortgages.length === 0) return '';
+  const lines = _activeMortgages.map(m =>
+    `順位番号:${m.rank||''}  登記の目的:${m.type||''}  受付年月日・受付番号:${m.date||''}  権利者その他の事項:${m.amount||''} 債権者:${m.creditor||''} 債務者:${m.debtor||''}`
+  );
+  return `\n\n【抵当権情報（権利部乙区に転記）】\n土地・建物の権利部（乙区）の「有」にチェックし、その右隣の余白に以下を転記してください：\n${lines.join('\n')}`;
+}
+
+// ══ 土地面積の合計・筆数計算 ══════════════════════════════
+function getTotalLandInfo(){
+  const lands = [];
+  for(let i=0; i<tplLandCount; i++){
+    const addr    = document.getElementById(`tpl-l${i}-addr`)?.value?.trim();
+    const chiban  = document.getElementById(`tpl-l${i}-chiban`)?.value?.trim();
+    const chime   = document.getElementById(`tpl-l${i}-chime`)?.value?.trim();
+    const chiseki = parseFloat(document.getElementById(`tpl-l${i}-chiseki`)?.value) || 0;
+    if(addr || chiban) lands.push({addr, chiban, chime, chiseki});
+  }
+  const totalArea = lands.reduce((sum, l) => sum + l.chiseki, 0);
+  const count = lands.length;
+  return { lands, totalArea: Math.round(totalArea * 100) / 100, count };
+}
+
+// ══ 周辺環境レポート ══════════════════════════════════════
+
+// OpenStreetMapで住所→緯度経度を取得
+async function geocodeAddress(address){
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=jp`;
+  const res = await fetch(url, {headers:{'Accept-Language':'ja','User-Agent':'fudosan-system/1.0'}});
+  const data = await res.json();
+  if(!data.length) throw new Error('住所が見つかりませんでした：' + address);
+  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), display: data[0].display_name };
+}
+
+// Overpass APIで周辺施設を検索
+async function searchNearby(lat, lon, amenityTags, radius=800){
+  const tagQuery = amenityTags.map(t => `node["amenity"="${t}"](around:${radius},${lat},${lon});`).join('');
+  const shopQuery = amenityTags.filter(t=>t.startsWith('shop:')).map(t=>`node["shop"="${t.replace('shop:','')}"](around:${radius},${lat},${lon});`).join('');
+  const railwayQuery = amenityTags.includes('station') ? `node["railway"="station"](around:1200,${lat},${lon});node["railway"="subway_entrance"](around:1200,${lat},${lon});` : '';
+  const query = `[out:json][timeout:25];(${tagQuery}${shopQuery}${railwayQuery});out body;`;
+  const res = await fetch('https://overpass-api.de/api/interpreter', {
+    method:'POST', body: 'data=' + encodeURIComponent(query)
+  });
+  const data = await res.json();
+  return data.elements || [];
+}
+
+// 2点間の距離計算（メートル）
+function calcDist(lat1, lon1, lat2, lon2){
+  const R = 6371000;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+
+// 徒歩時間（分）
+function walkMin(meters){ return Math.ceil(meters / 80); }
+
+// 施設リストのHTML生成
+function renderFacilityList(items, max=5){
+  if(!items.length) return '<div style="color:var(--hint);font-size:12px;">該当施設なし</div>';
+  return items.slice(0,max).map(item => {
+    const name = item.tags?.name || item.tags?.['name:ja'] || '(名称不明)';
+    const dist = item._dist;
+    const walk = walkMin(dist);
+    return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <span>${name}</span>
+      <span style="color:var(--sub);white-space:nowrap;margin-left:8px;">${dist}m（徒歩${walk}分）</span>
+    </div>`;
+  }).join('');
+}
+
+// セクションカードHTML
+function kankyouCard(icon, title, color, content){
+  return `<div class="card" style="margin-bottom:12px;">
+    <div style="font-size:13px;font-weight:700;color:${color};margin-bottom:10px;">${icon} ${title}</div>
+    ${content}
+  </div>`;
+}
+
+async function generateKankyouReport(){
+  const addr = document.getElementById('kankyou-addr').value.trim();
+  if(!addr){ showToast('住所を入力してください', true); return; }
+  const btn = document.getElementById('kankyou-btn');
+  const resultEl = document.getElementById('kankyou-result');
+  btn.disabled = true;
+  resultEl.innerHTML = '<div class="card"><div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);margin-top:8px;">周辺情報を取得中... (30秒ほどかかる場合があります)</div></div></div>';
+
+  try{
+    // 1. ジオコーディング
+    const geo = await geocodeAddress(addr);
+    const {lat, lon} = geo;
+
+    // 2. 各カテゴリの施設を検索
+    resultEl.innerHTML = '<div class="card"><div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);margin-top:8px;">施設データを取得中...</div></div></div>';
+
+    const [stations, supermarkets, conveniences, hospitals, schools, parks, govs, others] = await Promise.all([
+      searchNearby(lat, lon, ['station'], 1500),
+      searchNearby(lat, lon, ['shop:supermarket', 'shop:convenience'], 800),
+      searchNearby(lat, lon, ['shop:convenience'], 600),
+      searchNearby(lat, lon, ['hospital', 'clinic', 'pharmacy', 'doctors'], 800),
+      searchNearby(lat, lon, ['school', 'kindergarten'], 1000),
+      searchNearby(lat, lon, ['park'], 800),
+      searchNearby(lat, lon, ['townhall', 'post_office', 'police', 'fire_station'], 1500),
+      searchNearby(lat, lon, ['restaurant', 'fast_food', 'cafe', 'bank'], 500),
+    ]);
+
+    // 距離を計算してソート
+    const addDist = (items) => items.map(i => ({...i, _dist: calcDist(lat, lon, i.lat, i.lon)})).sort((a,b) => a._dist - b._dist);
+
+    const stationList   = addDist(stations).filter(i => i.tags?.name);
+    const superList     = addDist(supermarkets).filter(i => !i.tags?.amenity?.includes('convenience') && i.tags?.name);
+    const convList      = addDist(conveniences).filter(i => i.tags?.name);
+    const hospitalList  = addDist(hospitals).filter(i => i.tags?.amenity === 'hospital' || i.tags?.amenity === 'clinic' || i.tags?.amenity === 'doctors').filter(i => i.tags?.name);
+    const pharmacyList  = addDist(hospitals).filter(i => i.tags?.amenity === 'pharmacy').filter(i => i.tags?.name);
+    const schoolList    = addDist(schools).filter(i => i.tags?.name);
+    const parkList      = addDist(parks).filter(i => i.tags?.name);
+    const govList       = addDist(govs).filter(i => i.tags?.name);
+    const restaurantList= addDist(others).filter(i => ['restaurant','fast_food','cafe'].includes(i.tags?.amenity) && i.tags?.name);
+    const bankList      = addDist(others).filter(i => i.tags?.amenity === 'bank' && i.tags?.name);
+
+    // 最寄り駅
+    const nearestStation = stationList[0];
+    const stationSummary = nearestStation
+      ? `最寄り駅：<strong>${nearestStation.tags?.name||''}</strong>（${nearestStation._dist}m・徒歩${walkMin(nearestStation._dist)}分）`
+      : '最寄り駅：データなし';
+
+    // レポートHTML生成
+    const now = new Date().toLocaleDateString('ja-JP') + ' ' + new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    const reportHtml = `
+      <!-- ヘッダー -->
+      <div class="card" style="background:linear-gradient(135deg,#1a5c3a,#27ae60);color:#fff;margin-bottom:14px;">
+        <div style="font-size:16px;font-weight:700;margin-bottom:6px;">周辺環境レポート</div>
+        <div style="font-size:13px;opacity:.9;margin-bottom:4px;">📍 ${addr}</div>
+        <div style="font-size:11px;opacity:.7;">作成日時：${now}</div>
+      </div>
+
+      <!-- サマリー -->
+      <div class="card" style="margin-bottom:14px;background:#f0fdf4;border-color:#9FD4B8;">
+        <div style="font-size:13px;font-weight:700;color:var(--ok);margin-bottom:10px;">📋 周辺環境サマリー</div>
+        <div style="font-size:12px;line-height:2.2;">
+          🚉 ${stationSummary}<br>
+          🛒 最寄りスーパー：${superList[0] ? superList[0].tags?.name+'（'+superList[0]._dist+'m）' : 'データなし'}<br>
+          🏪 最寄りコンビニ：${convList[0] ? convList[0].tags?.name+'（'+convList[0]._dist+'m）' : 'データなし'}<br>
+          🏥 最寄り病院・クリニック：${hospitalList[0] ? hospitalList[0].tags?.name+'（'+hospitalList[0]._dist+'m）' : 'データなし'}<br>
+          🌳 最寄り公園：${parkList[0] ? parkList[0].tags?.name+'（'+parkList[0]._dist+'m）' : 'データなし'}<br>
+          🏫 周辺の学校：${schoolList.length > 0 ? schoolList.slice(0,2).map(s=>s.tags?.name).join('、') : 'データなし'}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <!-- 交通 -->
+        ${kankyouCard('🚉','交通（駅・バス停）','#2c3e50', stationList.length ?
+          `<div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:6px;">駅</div>${renderFacilityList(stationList, 5)}` :
+          '<div style="color:var(--hint);font-size:12px;">データなし</div>'
+        )}
+
+        <!-- スーパー・コンビニ -->
+        ${kankyouCard('🛒','スーパー・コンビニ','#e67e22',
+          `<div style="font-size:11px;font-weight:600;color:var(--sub);margin-bottom:4px;">スーパー</div>${renderFacilityList(superList,3)}
+           <div style="font-size:11px;font-weight:600;color:var(--sub);margin:8px 0 4px;">コンビニ</div>${renderFacilityList(convList,3)}`
+        )}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <!-- 病院・薬局 -->
+        ${kankyouCard('🏥','病院・医療機関','#e74c3c',
+          `<div style="font-size:11px;font-weight:600;color:var(--sub);margin-bottom:4px;">病院・クリニック</div>${renderFacilityList(hospitalList,4)}
+           <div style="font-size:11px;font-weight:600;color:var(--sub);margin:8px 0 4px;">薬局</div>${renderFacilityList(pharmacyList,3)}`
+        )}
+
+        <!-- 学校 -->
+        ${kankyouCard('🏫','学校・教育施設','#8e44ad', renderFacilityList(schoolList, 6))}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <!-- 公園 -->
+        ${kankyouCard('🌳','公園','#27ae60', renderFacilityList(parkList, 5))}
+
+        <!-- 公共施設 -->
+        ${kankyouCard('🏛','公共施設','#2980b9', renderFacilityList(govList, 5))}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <!-- 飲食店 -->
+        ${kankyouCard('🍽','飲食店・カフェ','#e67e22', renderFacilityList(restaurantList, 5))}
+
+        <!-- 銀行 -->
+        ${kankyouCard('🏦','金融機関','#7f8c8d', renderFacilityList(bankList, 4))}
+      </div>
+
+      <!-- PDF出力ボタン -->
+      <div style="text-align:center;margin-top:16px;">
+        <button class="pbtn" onclick="printKankyouReport()" style="padding:12px 32px;font-size:14px;">🖨 レポートを印刷・PDF保存</button>
+        <p style="font-size:11px;color:var(--hint);margin-top:8px;">印刷ダイアログで「PDFに保存」を選択するとPDFとして保存できます</p>
+      </div>
+
+      <!-- 注意書き -->
+      <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:var(--r);padding:10px 14px;margin-top:12px;font-size:11px;color:#7c5800;line-height:1.8;">
+        ※ 本レポートはOpenStreetMapのデータを使用しています。情報は必ずしも最新・正確ではない場合があります。<br>
+        ※ 実際の取引にあたっては現地確認および公的機関への確認をお勧めします。<br>
+        ※ データ取得日：${now}
+      </div>
+    `;
+
+    resultEl.innerHTML = reportHtml;
+
+    // 作業履歴を保存
+    saveWorkHistory('kankyou', `周辺環境レポート：${addr}`, {addr}, addr);
+
+  }catch(e){
+    resultEl.innerHTML = `<div class="card danger-box">❌ エラー：${e.message}<br><small>住所を詳しく入力してみてください（例：東京都○○区○○丁目○番○号）</small></div>`;
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+// 印刷用
+function printKankyouReport(){
+  const addr = document.getElementById('kankyou-addr').value;
+  const content = document.getElementById('kankyou-result').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html lang="ja"><head>
+    <meta charset="UTF-8">
+    <title>周辺環境レポート - ${addr}</title>
+    <style>
+      body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;font-size:12px;color:#1a1a1a;padding:20px;max-width:800px;margin:0 auto;}
+      .card{border:1px solid #ddd;border-radius:8px;padding:14px;margin-bottom:12px;}
+      .spin-wrap,.pbtn,button{display:none!important;}
+      h2{font-size:16px;}
+      @media print{.no-print{display:none;}}
+      div[style*="grid"]{display:block!important;}
+    </style>
+  </head><body>${content}</body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(), 500);
+}
 
 function saveStaffName(){
   const name = document.getElementById('staff-name-input')?.value.trim();
@@ -4125,6 +4474,31 @@ function applyRegToTemplate(){
     }
   });
   if(tplLandCount===0) addTplLandRow();
+
+  // 土地の合計面積・筆数を計算して表示
+  const { totalArea, count } = getTotalLandInfo();
+  if(count > 0){
+    showToast(`${count}筆の土地を反映しました（合計地積：${totalArea}㎡）`);
+  }
+
+  // 抵当権を収集してテンプレートに表示
+  const allMortgages = [];
+  ok.forEach(r => {
+    const d = r.data;
+    // 建物の抵当権
+    if(d.building && d.building.mortgages){
+      d.building.mortgages.filter(m=>m.status!=='抹消').forEach(m=>allMortgages.push(m));
+    }
+    // 土地の抵当権
+    if(d.mortgages){
+      d.mortgages.filter(m=>m.status!=='抹消').forEach(m=>allMortgages.push(m));
+    }
+    // フラット形式
+    if(d.land_mortgages){
+      d.land_mortgages.filter(m=>m.status!=='抹消').forEach(m=>allMortgages.push(m));
+    }
+  });
+  updateMortgageSection(allMortgages);
 
   // 建物情報（区分所有）
   sv('tpl-itto-address',  first.building_itto_address);
