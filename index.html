@@ -239,7 +239,6 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
     <div class="nav-btn" onclick="showPage('registry',this)">📄 登記簿解析</div>
     <div class="nav-btn" onclick="showPage('chosa',this)">📋 重要事項調査報告書</div>
     <div class="nav-btn" onclick="showPage('notifications',this)" id="nav-notifications" style="position:relative;">🔔 通知 <span id="notif-badge" style="display:none;background:#c0392b;color:#fff;border-radius:99px;font-size:9px;padding:1px 5px;margin-left:2px;">0</span></div>
-    <div class="nav-btn" onclick="showPage('customers',this)">👥 顧客管理</div>
     <div class="nav-btn" onclick="showPage('chat',this)">💬 AIチャット</div>
     <div class="nav-btn" onclick="showPage('template',this)">📝 テンプレート入力</div>
     <div class="nav-btn" onclick="showPage('kankyou',this)" style="color:#27ae60;font-weight:700;">🗺 周辺環境レポート</div>
@@ -350,25 +349,6 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
             <div class="empty">通知はありません</div>
           </div>
         </div>
-      </div>
-
-
-      <!-- 顧客管理 -->
-      <div class="page" id="page-customers">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-          <h2 style="font-size:17px;font-weight:700;">顧客管理</h2>
-          <button class="pbtn" style="width:auto;padding:8px 16px;" onclick="showCustomerForm()">＋ 新規顧客登録</button>
-        </div>
-        <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
-          <button class="obtn" onclick="filterCustomers('all')" id="cf-all" style="border-color:var(--accent);color:var(--accent);">全員</button>
-          <button class="obtn" onclick="filterCustomers('buy')" id="cf-buy">購入客</button>
-          <button class="obtn" onclick="filterCustomers('sell')" id="cf-sell">売却客</button>
-          <button class="obtn" onclick="filterCustomers('rent')" id="cf-rent">賃貸客</button>
-          <button class="obtn" onclick="filterCustomers('closed')" id="cf-closed">✓ 成約</button>
-          <button class="obtn" onclick="filterCustomers('rankA')" id="cf-rankA" style="color:#c0392b;border-color:#c0392b;">A ランク</button>
-          <div class="fi" style="flex:1;min-width:140px;"><input type="text" id="cust-search" placeholder="名前・電話番号で検索" oninput="filterCustomers('search')"/></div>
-        </div>
-        <div id="customer-list"></div>
       </div>
 
 
@@ -673,103 +653,6 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
   </div>
 </div>
 
-<!-- Customer Form Modal -->
-<div class="modal-overlay" id="cust-modal">
-  <div class="modal" style="width:680px;">
-    <div class="modal-head"><div class="modal-title" id="cust-modal-title">新規顧客登録</div><button class="modal-close" onclick="closeModal('cust-modal')">×</button></div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-group"><div class="form-label">氏名 *</div><div class="fi"><input type="text" id="c-name" placeholder="山田 太郎"/></div></div>
-        <div class="form-group"><div class="form-label">フリガナ</div><div class="fi"><input type="text" id="c-kana" placeholder="ヤマダ タロウ"/></div></div>
-        <div class="form-group"><div class="form-label">電話番号</div><div class="fi"><input type="tel" id="c-tel" placeholder="090-0000-0000"/></div></div>
-        <div class="form-group"><div class="form-label">メールアドレス</div><div class="fi"><input type="email" id="c-email" placeholder="example@email.com"/></div></div>
-        <div class="form-group"><div class="form-label">生年月日</div><div class="fi"><input type="date" id="c-birth"/></div></div>
-        <div class="form-group"><div class="form-label">職業</div><div class="fi"><input type="text" id="c-job" placeholder="会社員・自営業…"/></div></div>
-        <div class="form-group"><div class="form-label">年収（万円）</div><div class="fi"><input type="number" id="c-income" placeholder="600"/></div></div>
-        <div class="form-group"><div class="form-label">勤続年数</div><div class="fi"><input type="text" id="c-years" placeholder="5年"/></div></div>
-      </div>
-      <div class="form-group"><div class="form-label">住所</div><div class="fi"><input type="text" id="c-addr" placeholder="東京都…"/></div></div>
-      <div class="form-grid">
-        <div class="form-group"><div class="form-label">家族構成</div><div class="fi"><input type="text" id="c-family" placeholder="夫婦・子2人"/></div></div>
-        <div class="form-group"><div class="form-label">共有者</div><div class="fi"><input type="text" id="c-co" placeholder="配偶者氏名など"/></div></div>
-      </div>
-      <div class="form-group">
-        <div class="form-label">顧客種別 *</div>
-        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;"><input type="radio" name="c-type" value="buy" id="ct-buy" checked> 購入客</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;"><input type="radio" name="c-type" value="sell" id="ct-sell"> 売却客</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;"><input type="radio" name="c-type" value="rent" id="ct-rent"> 賃貸客</label>
-        </div>
-      </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <div class="form-label">媒介種別</div>
-          <div class="fi"><select id="c-baitai">
-            <option value="">未設定</option>
-            <option value="専任媒介">専任媒介</option>
-            <option value="専属専任媒介">専属専任媒介</option>
-            <option value="一般媒介">一般媒介</option>
-            <option value="なし">なし（直接）</option>
-          </select></div>
-        </div>
-        <div class="form-group">
-          <div class="form-label">顧客ランク</div>
-          <div class="fi"><select id="c-rank">
-            <option value="">未設定</option>
-            <option value="A">A：最優先（購入・売却意欲高）</option>
-            <option value="B">B：有望（検討中）</option>
-            <option value="C">C：情報収集段階</option>
-            <option value="D">D：長期・様子見</option>
-          </select></div>
-        </div>
-        <div class="form-group">
-          <div class="form-label">ステータス</div>
-          <div class="fi"><select id="c-status">
-            <option value="active">対応中</option>
-            <option value="contract">契約締結</option>
-            <option value="closed">成約・完了</option>
-            <option value="pause">一時停止</option>
-            <option value="lost">失注</option>
-          </select></div>
-        </div>
-        <div class="form-group">
-          <div class="form-label">初回接触日</div>
-          <div class="fi"><input type="date" id="c-first-contact"/></div>
-        </div>
-      </div>
-      <!-- 購入・賃貸 希望条件 -->
-      <div id="buy-fields">
-        <div style="font-size:11px;font-weight:700;color:var(--accent);margin:8px 0 6px;text-transform:uppercase;">希望条件</div>
-        <div class="form-grid">
-          <div class="form-group"><div class="form-label">希望エリア</div><div class="fi"><input type="text" id="c-area" placeholder="世田谷区・杉並区…"/></div></div>
-          <div class="form-group"><div class="form-label">予算</div><div class="fi"><input type="text" id="c-budget" placeholder="4000〜5000万円"/></div></div>
-          <div class="form-group"><div class="form-label">間取り</div><div class="fi"><input type="text" id="c-madori" placeholder="3LDK以上"/></div></div>
-          <div class="form-group"><div class="form-label">物件種別</div><div class="fi"><select id="c-btype"><option value="">未定</option><option>マンション</option><option>戸建</option><option>土地</option><option>どちらでも</option></select></div></div>
-        </div>
-        <div class="form-group"><div class="form-label">その他希望条件</div><div class="fi"><textarea id="c-cond" placeholder="駅徒歩10分以内・小学校区・ペット可…" style="min-height:50px;"></textarea></div></div>
-        <div class="form-group"><div class="form-label">問い合わせ物件情報</div><div class="fi"><textarea id="c-inquiry" placeholder="問い合わせた物件名・住所・日付など…" style="min-height:50px;"></textarea></div></div>
-      </div>
-      <!-- 売却 査定情報 -->
-      <div id="sell-fields" style="display:none;">
-        <div style="font-size:11px;font-weight:700;color:var(--accent);margin:8px 0 6px;text-transform:uppercase;">査定対象地</div>
-        <div class="form-grid">
-          <div class="form-group"><div class="form-label">所在地</div><div class="fi"><input type="text" id="c-prop-addr" placeholder="売却物件の住所"/></div></div>
-          <div class="form-group"><div class="form-label">種別</div><div class="fi"><select id="c-prop-type"><option>戸建</option><option>マンション</option><option>土地</option><option>収益物件</option></select></div></div>
-          <div class="form-group"><div class="form-label">土地面積</div><div class="fi"><input type="text" id="c-prop-land" placeholder="㎡"/></div></div>
-          <div class="form-group"><div class="form-label">建物面積</div><div class="fi"><input type="text" id="c-prop-build" placeholder="㎡"/></div></div>
-          <div class="form-group"><div class="form-label">築年</div><div class="fi"><input type="text" id="c-prop-year" placeholder="2000年築"/></div></div>
-          <div class="form-group"><div class="form-label">希望売却価格</div><div class="fi"><input type="text" id="c-prop-hope" placeholder="4000万円"/></div></div>
-        </div>
-        <div class="form-group"><div class="form-label">売却理由・備考</div><div class="fi"><textarea id="c-prop-note" placeholder="住み替え・相続…" style="min-height:50px;"></textarea></div></div>
-      </div>
-      <div class="form-group"><div class="form-label">メモ</div><div class="fi"><textarea id="c-memo" placeholder="その他の備考・対応履歴など…" style="min-height:60px;"></textarea></div></div>
-      <div class="row-btns">
-        <button class="btn-ng" onclick="closeModal('cust-modal')">キャンセル</button>
-        <button class="btn-ok" onclick="saveCustomer()">保存</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- API Modal -->
 <!-- Dropboxモーダル -->
@@ -1413,7 +1296,6 @@ const MODEL = 'claude-opus-4-5';
 // ══ STATE ═══════════════════════════════════════════
 let currentPage = 'search';
 let searchResult = null, regResults = [];
-let customers = [], editingCustId = null;
 let chatHistory = [];
 let jutakuList = [];
 
@@ -1432,7 +1314,6 @@ function doLogin() {
     updateApiStatus();
     updateDbxStatus();
     renderSidebar('search');
-    renderCustomerList();
     renderJutakuList();
     restoreChat();
     // Dropboxが設定されていればデータを自動ロード
@@ -1495,7 +1376,7 @@ function showPage(name, el) {
 function renderSidebar(page) {
   const sb = document.getElementById('sidebar-inner');
   const sideEl = document.getElementById('sidebar');
-  if (['customers','chat','jutaku','chosa','notifications','template'].includes(page)) {
+  if (['chat','jutaku','chosa','notifications','template'].includes(page)) {
     sideEl.style.display = 'none'; return;
   }
   sideEl.style.display = 'flex';
@@ -1915,113 +1796,6 @@ function showJutakuDetail(i){
   document.getElementById('jutaku-output').innerHTML=`<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin:0;">${j.addr}（${j.date}）</div><button class="obtn" onclick="copyJutakuText(${i})">コピー</button></div><div style="font-size:12px;line-height:1.9;white-space:pre-wrap;">${j.text}</div></div>`;
   document.getElementById('jutaku-output').scrollIntoView({behavior:'smooth'});
 }
-
-// ══ 顧客管理 ══════════════════════════════════════════
-function saveCustomer(){
-  const type=document.querySelector('input[name="c-type"]:checked')?.value||'buy';
-  const cust={
-    id:editingCustId||Date.now().toString(),
-    name:document.getElementById('c-name').value,
-    kana:document.getElementById('c-kana').value,
-    tel:document.getElementById('c-tel').value,
-    email:document.getElementById('c-email').value,
-    birth:document.getElementById('c-birth').value,
-    job:document.getElementById('c-job').value,
-    income:document.getElementById('c-income').value,
-    years:document.getElementById('c-years').value,
-    addr:document.getElementById('c-addr').value,
-    family:document.getElementById('c-family').value,
-    co:document.getElementById('c-co').value,
-    baitai:document.getElementById('c-baitai').value,
-    rank:document.getElementById('c-rank').value,
-    status:document.getElementById('c-status').value,
-    firstContact:document.getElementById('c-first-contact').value,
-    type,
-    area:document.getElementById('c-area').value,
-    budget:document.getElementById('c-budget').value,
-    madori:document.getElementById('c-madori').value,
-    btype:document.getElementById('c-btype').value,
-    cond:document.getElementById('c-cond').value,
-    inquiry:document.getElementById('c-inquiry').value,
-    propAddr:document.getElementById('c-prop-addr').value,
-    propType:document.getElementById('c-prop-type').value,
-    propLand:document.getElementById('c-prop-land').value,
-    propBuild:document.getElementById('c-prop-build').value,
-    propYear:document.getElementById('c-prop-year').value,
-    propHope:document.getElementById('c-prop-hope').value,
-    propNote:document.getElementById('c-prop-note').value,
-    memo:document.getElementById('c-memo').value,
-    updated:new Date().toLocaleDateString('ja-JP'),
-  };
-  if(!cust.name){alert('氏名を入力してください');return;}
-  if(editingCustId){const idx=customers.findIndex(c=>c.id===editingCustId);if(idx>=0)customers[idx]=cust;else customers.unshift(cust);}
-  else customers.unshift(cust);
-  localStorage.setItem('fud_customers',JSON.stringify(customers));
-  closeModal('cust-modal');
-  renderCustomerList();
-  showToast('顧客情報を保存しました');
-  // Dropboxが設定されていれば自動保存
-  if(getDbxToken()) dbxSaveAll();
-}
-
-let custFilter='all';
-function filterCustomers(f){
-  custFilter=f;
-  document.querySelectorAll('[id^="cf-"]').forEach(b=>b.style.cssText='');
-  const active=document.getElementById('cf-'+f);if(active)active.style.cssText='border-color:var(--accent);color:var(--accent);';
-  renderCustomerList();
-}
-function renderCustomerList(){
-  const el=document.getElementById('customer-list');if(!el)return;
-  const q=(document.getElementById('cust-search')||{}).value||'';
-  let list=customers;
-  if(custFilter==='closed') list=list.filter(c=>c.status==='closed'||c.status==='contract');
-  else if(custFilter==='rankA') list=list.filter(c=>c.rank==='A');
-  else if(custFilter==='search'){}
-  else if(custFilter!=='all') list=list.filter(c=>c.type===custFilter);
-  if(q)list=list.filter(c=>(c.name+c.tel+(c.kana||'')).includes(q));
-  if(!list.length){el.innerHTML='<div class="empty">顧客が見つかりません</div>';return;}
-  const typeLabel={buy:'購入客',sell:'売却客',rent:'賃貸客'};
-  const tagClass={buy:'tag-buy',sell:'tag-sell',rent:'tag-rent'};
-  const statusLabel={active:'対応中',contract:'契約締結',closed:'成約',pause:'停止',lost:'失注'};
-  const statusColor={active:'#185FA5',contract:'#27500A',closed:'#0F5132',pause:'#633806',lost:'#8B1A1A'};
-  const rankColor={'A':'#c0392b','B':'#e67e22','C':'#2980b9','D':'#7f8c8d'};
-  el.innerHTML=list.map(c=>`
-    <div class="customer-card" onclick="editCustomer('${c.id}')">
-      <div class="customer-avatar" style="${c.rank?'background:'+rankColor[c.rank]+';color:#fff;':''}">${c.rank?c.rank:(c.name||'?')[0]}</div>
-      <div class="customer-info">
-        <div class="customer-name">
-          ${c.name||'—'}
-          <span class="tag ${tagClass[c.type]||'tag-buy'}">${typeLabel[c.type]||'購入客'}</span>
-          ${c.baitai?`<span class="tag" style="background:#EAF3DE;color:#27500A;">${c.baitai}</span>`:''}
-          ${c.status&&c.status!=='active'?`<span class="tag" style="background:${statusColor[c.status]||'#666'}22;color:${statusColor[c.status]||'#666'};">${statusLabel[c.status]||c.status}</span>`:''}
-        </div>
-        <div class="customer-sub">${c.tel||''} ${c.email?'/ '+c.email:''}</div>
-        <div class="customer-sub">${c.type==='sell'?'売却：'+(c.propAddr||'—'):c.type==='rent'?'賃貸希望：'+(c.area||'—')+'　予算：'+(c.budget||'—'):'購入希望：'+(c.area||'—')+'　予算：'+(c.budget||'—')} ${c.updated?'（更新：'+c.updated+'）':''}</div>
-      </div>
-    </div>`).join('');
-}
-function showCustomerForm(){
-  editingCustId=null;
-  document.getElementById('cust-modal-title').textContent='新規顧客登録';
-  ['c-name','c-kana','c-tel','c-email','c-birth','c-job','c-income','c-years','c-addr','c-family','c-co','c-area','c-budget','c-madori','c-cond','c-inquiry','c-prop-addr','c-prop-land','c-prop-build','c-prop-year','c-prop-hope','c-prop-note','c-memo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('ct-buy').checked=true;
-  document.getElementById('buy-fields').style.display='block';
-  document.getElementById('sell-fields').style.display='none';
-  document.getElementById('cust-modal').classList.add('open');
-}
-function editCustomer(id){
-  const c=customers.find(x=>x.id===id);if(!c)return;
-  editingCustId=id;
-  document.getElementById('cust-modal-title').textContent='顧客情報編集';
-  const fields={name:'c-name',kana:'c-kana',tel:'c-tel',email:'c-email',birth:'c-birth',job:'c-job',income:'c-income',years:'c-years',addr:'c-addr',family:'c-family',co:'c-co',baitai:'c-baitai',rank:'c-rank',status:'c-status',firstContact:'c-first-contact',area:'c-area',budget:'c-budget',madori:'c-madori',btype:'c-btype',cond:'c-cond',inquiry:'c-inquiry',propAddr:'c-prop-addr',propLand:'c-prop-land',propBuild:'c-prop-build',propYear:'c-prop-year',propHope:'c-prop-hope',propNote:'c-prop-note',memo:'c-memo'};
-  Object.entries(fields).forEach(([k,fid])=>{const el=document.getElementById(fid);if(el)el.value=c[k]||'';});
-  document.querySelector(`input[name="c-type"][value="${c.type||'buy'}"]`).checked=true;
-  document.getElementById('buy-fields').style.display=c.type==='sell'?'none':'block';
-  document.getElementById('sell-fields').style.display=c.type==='sell'?'block':'none';
-  document.getElementById('cust-modal').classList.add('open');
-}
-document.querySelectorAll('input[name="c-type"]').forEach(r=>{r.addEventListener('change',e=>{document.getElementById('buy-fields').style.display=e.target.value==='sell'?'none':'block';document.getElementById('sell-fields').style.display=e.target.value==='sell'?'block':'none';});});
 
 
 // ══ AI チャット ══════════════════════════════════════
@@ -3611,8 +3385,21 @@ async function _doKankyouReport(lat,lon,addr){
 
     _renderKankyouResult(CATS,lat,lon,addr,now,resultEl);
 
-    // 履歴保存
-    const histItem={title:addr,addr,lat,lon,cats:CATS.map(c=>({...c,items:c.items.slice(0,10)})),date:now,savedAt:Date.now()};
+    // 履歴保存（印刷に必要な全データを保存）
+    const histItem={
+      title: addr,
+      addr, lat, lon,
+      cats: CATS.map(c=>({
+        key:c.key, label:c.label, icon:c.icon, color:c.color,
+        items: c.items.slice(0,10).map(item=>({
+          lat:item.lat, lon:item.lon,
+          tags:{name:item.tags?.name||''},
+          _dist:item._dist, _catColor:c.color
+        }))
+      })),
+      date: now,
+      savedAt: Date.now()
+    };
     let hist=[];try{hist=JSON.parse(localStorage.getItem('fud_kankyou_hist')||'[]');}catch(e){}
     hist.unshift(histItem);
     localStorage.setItem('fud_kankyou_hist',JSON.stringify(hist.slice(0,20)));
@@ -3654,7 +3441,7 @@ function _renderKankyouResult(CATS,lat,lon,addr,now,resultEl){
         <span style="font-size:18px;">${c.icon}</span><span style="font-size:15px;font-weight:700;">${c.label}</span>
         <span style="opacity:.8;margin-left:auto;font-size:12px;">${c.items.length}件</span>
       </div>
-      <div id="kmap-${c.key}" style="height:280px;border:1px solid #ddd;border-top:none;background:#f0f0f0;"></div>
+      <div id="kmap-${c.key}" style="height:420px;border:1px solid #ddd;border-top:none;background:#f0f0f0;"></div>
       <div style="border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;padding:12px;">
         ${listHtml(c.items,10)}
       </div>
@@ -3738,7 +3525,7 @@ function printKankyouReport(){
         <span style="font-size:18px;">${cat.icon}</span><span style="font-size:15px;font-weight:700;">${cat.label}</span>
         <span style="opacity:.8;margin-left:auto;font-size:12px;">${cat.items.length}件</span>
       </div>
-      <div id="pm-${cat.key}" class="map-box" data-lat="${lat}" data-lon="${lon}" data-color="${cat.color}" data-markers='${JSON.stringify(mdata).replace(/'/g,"&#39;")}' style="height:350px;border:1px solid #ddd;border-top:none;background:#eee;"></div>
+      <div id="pm-${cat.key}" class="map-box" data-lat="${lat}" data-lon="${lon}" data-color="${cat.color}" data-markers='${JSON.stringify(mdata).replace(/'/g,"&#39;")}' style="height:420px;border:1px solid #ddd;border-top:none;background:#eee;"></div>
       <div style="border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;padding:12px;">${listHtmlP(cat.items,cat.color,10)}</div>
     </div>`;
   }).join('\n');
@@ -3756,7 +3543,7 @@ body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;background:#fff;}
   @page{size:A4 portrait;margin:10mm 8mm;}
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .cat-section{page-break-inside:avoid;}
-  .map-box{height:330px!important;}
+  .map-box{height:400px!important;}
 }
 </style></head><body><div class="wrap">
 <div style="background:linear-gradient(135deg,#1a5c3a,#27ae60);color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:14px;">
