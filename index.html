@@ -1544,15 +1544,7 @@ function renderSearchResult(addr,d,date){
     </div>`;
 }
 
-function copyToJutaku(){
-  if(!searchResult)return;
-  const d=searchResult.data,a=searchResult.addr;
-  document.getElementById('jt-addr').value=a;
-  document.getElementById('jt-gyosei').value=`用途地域：${d.yoto||'要確認'}\n建蔽率：${d.kenpei||'要確認'}%\n容積率：${d.yoseki||'要確認'}%\n防火指定：${d.bouka||'要確認'}\n高度地区：${d.kodo||'要確認'}\n日影規制：${d.hikage||'要確認'}\n地区計画：${d.chiku&&d.chiku.length>0?d.chiku.map(c=>c.name).join('、'):'なし'}\n計画道路：${d.keikaku_doro||'要確認'}`;
-  showPage('jutaku', document.querySelectorAll('.nav-btn')[2]);
-  showToast('行政調査結果を引用しました');
-}
-
+function copyToJutaku(){ showToast("この機能は現在のバージョンでは使用しません"); }
 function openShareSearch(){
   if(!searchResult)return;
   const d=searchResult.data,a=searchResult.addr,dt=searchResult.date;
@@ -1696,85 +1688,9 @@ function renderRegResults(results,date){
     ${cardsHtml}`;
 }
 
-function copyRegToJutaku(){
-  if(!regResults.length)return;
-  const lines=[];
-  regResults.filter(r=>r.ok).forEach(r=>{
-    const d=r.data;
-    lines.push(`【${r.file}】`);
-    if(d.land_address)lines.push(`所在：${d.land_address}`);
-    if(d.land_chiban)lines.push(`地番：${d.land_chiban}`);
-    if(d.land_chiseki)lines.push(`地積：${d.land_chiseki}㎡`);
-    if(d.owner)lines.push(`所有者：${d.owner.map(o=>o.name).join('・')}`);
-    const m=(d.mortgages||[]).filter(m=>m.status!=='抹消');
-    lines.push(`抵当権：${m.length>0?m.map(x=>x.type+'（'+x.creditor+'）').join('、'):'なし'}`);
-    lines.push('');
-  });
-  document.getElementById('jt-toki').value=lines.join('\n');
-  showPage('jutaku', document.querySelectorAll('.nav-btn')[2]);
-  showToast('登記簿情報を引用しました');
-}
-
+function copyRegToJutaku(){ showToast("この機能は現在のバージョンでは使用しません"); }
 // ══ 重要事項説明書 ════════════════════════════════════
-function autoFillJutaku(){
-  if(searchResult){
-    const d=searchResult.data,a=searchResult.addr;
-    if(!document.getElementById('jt-addr').value)document.getElementById('jt-addr').value=a;
-    if(!document.getElementById('jt-gyosei').value)document.getElementById('jt-gyosei').value=`用途地域：${d.yoto||'要確認'}\n建蔽率：${d.kenpei||'要確認'}%\n容積率：${d.yoseki||'要確認'}%\n防火指定：${d.bouka||'要確認'}\n高度地区：${d.kodo||'要確認'}\n日影規制：${d.hikage||'要確認'}\n地区計画：${d.chiku&&d.chiku.length?d.chiku.map(c=>c.name).join('、'):'なし'}\n計画道路：${d.keikaku_doro||'要確認'}`;
-  }
-  if(regResults.length){
-    const lines=[];
-    regResults.filter(r=>r.ok).forEach(r=>{
-      const d=r.data;
-      if(d.land_address)lines.push(`所在：${d.land_address}`);
-      if(d.land_chiban)lines.push(`地番：${d.land_chiban}`);
-      if(d.land_chiseki)lines.push(`地積：${d.land_chiseki}㎡`);
-      if(d.owner)lines.push(`所有者：${d.owner.map(o=>o.name).join('・')}`);
-      const m=(d.mortgages||[]).filter(m=>m.status!=='抹消');
-      lines.push(`抵当権：${m.length?m.map(x=>x.type+'（'+x.creditor+'）').join('、'):'なし'}`);
-    });
-    if(!document.getElementById('jt-toki').value)document.getElementById('jt-toki').value=lines.join('\n');
-  }
-  showToast('調査・解析結果を引用しました');
-}
-
-async function generateJutaku(){
-  const addr=document.getElementById('jt-addr').value;
-  const seller=document.getElementById('jt-seller').value;
-  const buyer=document.getElementById('jt-buyer').value;
-  const price=document.getElementById('jt-price').value;
-  const gyosei=document.getElementById('jt-gyosei').value;
-  const toki=document.getElementById('jt-toki').value;
-  const note=document.getElementById('jt-note').value;
-  if(!addr){alert('物件所在地を入力してください');return;}
-  const apiKey=localStorage.getItem('fud_api')||'';
-  if(!apiKey.startsWith('sk-')){if(confirm('APIキーが未設定です。設定しますか？')){openApiModal();}return;}
-  document.getElementById('jutaku-output').style.display='block';
-  document.getElementById('jutaku-output').innerHTML='<div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);">重要事項説明書を生成中...</div></div>';
-  const prompt=`不動産の重要事項説明書の主要記載事項をまとめてください。\n\n物件所在地：${addr}\n売主：${seller||'未入力'}\n買主：${buyer||'未入力'}\n売買代金：${price||'未入力'}\n\n【行政調査結果】\n${gyosei||'未入力'}\n\n【登記簿情報】\n${toki||'未入力'}\n\n【特記事項】\n${note||'なし'}\n\n以下の項目を含む重要事項説明書の記載内容を作成してください：\n1. 対象物件の表示\n2. 都市計画法・建築基準法等の法令に基づく制限\n3. 登記記録に記録された事項\n4. 売買代金・手付金等の金額\n5. 契約解除に関する事項\n6. 損害賠償額の予定・違約金\n7. 瑕疵担保責任・契約不適合責任\n8. 説明すべき重要事項・特約\n\n※参考情報として作成。実際の重説は宅建士が確認・修正してください。`;
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:MODEL,max_tokens:3000,messages:[{role:'user',content:prompt}]})});
-    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||res.status);}
-    const data=await res.json();
-    const text=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    const dt=new Date().toLocaleDateString('ja-JP')+' '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
-    const entry={addr,text,date:dt};
-    jutakuList.unshift(entry);localStorage.setItem('fud_jutaku',JSON.stringify(jutakuList.slice(0,20)));
-    renderJutakuList();
-    if(getDbxToken())setTimeout(()=>dbxSaveAll(),500);
-    document.getElementById('jutaku-output').innerHTML=`
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <div class="card-title" style="margin:0;">生成された重要事項（${dt}）</div>
-          <button class="obtn" onclick="copyJutakuText(${0})">コピー</button>
-        </div>
-        <div style="font-size:12px;line-height:1.9;white-space:pre-wrap;color:var(--text);">${text}</div>
-        <div class="note-box" style="margin-top:12px;">⚠ この内容はAIによる参考情報です。宅地建物取引士が内容を確認・修正した上でご使用ください。</div>
-      </div>`;
-  }catch(e){
-    document.getElementById('jutaku-output').innerHTML=`<div class="spin-wrap"><div style="color:#c0392b;font-size:13px;font-weight:600;">エラー：${e.message}</div></div>`;
-  }
-}
+function autoFillJutaku(){ showToast("この機能は現在のバージョンでは使用しません"); }
 function copyJutakuText(i){
   const text=jutakuList[i]?.text;
   if(!text)return;
@@ -2421,11 +2337,7 @@ function applySearchHist(i){
   const d = h.data;
   const gyoseiText = `用途地域：${d.yoto||'要確認'}\n建蔽率：${d.kenpei||'要確認'}%\n容積率：${d.yoseki||'要確認'}%\n防火指定：${d.bouka||'要確認'}\n高度地区：${d.kodo||'要確認'}\n日影規制：${d.hikage||'要確認'}\n地区計画：${d.chiku&&d.chiku.length?d.chiku.map(c=>c.name).join('、'):'なし'}\n計画道路：${d.keikaku_doro||'要確認'}`;
   
-  if(_histPickerTarget === 'jutaku'){
-    if(!document.getElementById('jt-addr').value) document.getElementById('jt-addr').value = h.addr;
-    document.getElementById('jt-gyosei').value = gyoseiText;
-    showToast('行政調査結果を重要事項説明書に引用しました');
-  } else if(_histPickerTarget === 'tpl'){
+  if(_histPickerTarget === 'tpl'){
     document.getElementById('tpl-yoto').value   = d.yoto||'';
     document.getElementById('tpl-kenpei').value = (d.kenpei||'').replace('%','').trim();
     document.getElementById('tpl-yoseki').value = (d.yoseki||'').replace('%','').trim();
@@ -2449,21 +2361,7 @@ function applyRegHist(i){
   const results = h.results || [];
   const ok = results.filter(r=>r.ok);
   
-  if(_histPickerTarget === 'jutaku'){
-    const lines = [];
-    ok.forEach(r=>{
-      const d = r.data;
-      if(d.land_address) lines.push(`所在：${d.land_address}`);
-      if(d.land_chiban)  lines.push(`地番：${d.land_chiban}`);
-      if(d.land_chiseki) lines.push(`地積：${d.land_chiseki}㎡`);
-      if(d.owner)        lines.push(`所有者：${d.owner.map(o=>o.name).join('・')}`);
-      const mort = (d.mortgages||[]).filter(m=>m.status!=='抹消');
-      lines.push(`抵当権：${mort.length?mort.map(m=>m.type+'（'+m.creditor+'）').join('、'):'なし'}`);
-      lines.push('');
-    });
-    document.getElementById('jt-toki').value = lines.join('\n');
-    showToast('登記簿情報を重要事項説明書に引用しました');
-  } else if(_histPickerTarget === 'tpl'){
+  if(_histPickerTarget === 'tpl'){
     // 売主・土地情報をテンプレートに引用
     if(ok.length){
       const first = ok[0].data;
@@ -3426,7 +3324,7 @@ function _renderKankyouResult(CATS,lat,lon,addr,now,resultEl){
 
   // 施設一覧HTML（番号付き）
   const listHtml=(items,max=10)=>items.slice(0,max).map((item,i)=>`
-    <div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:12px;align-items:center;">
+    <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:13px;align-items:center;">
       <span style="background:${item._catColor};color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</span>
       <span style="flex:1;">${item.tags?.name||'(名称不明)'}</span>
       <span style="color:#888;white-space:nowrap;">${item._dist}m（徒歩${Math.ceil(item._dist/80)}分）</span>
@@ -3441,7 +3339,7 @@ function _renderKankyouResult(CATS,lat,lon,addr,now,resultEl){
         <span style="font-size:18px;">${c.icon}</span><span style="font-size:15px;font-weight:700;">${c.label}</span>
         <span style="opacity:.8;margin-left:auto;font-size:12px;">${c.items.length}件</span>
       </div>
-      <div id="kmap-${c.key}" style="height:420px;border:1px solid #ddd;border-top:none;background:#f0f0f0;"></div>
+      <div id="kmap-${c.key}" style="height:560px;border:1px solid #ddd;border-top:none;background:#f0f0f0;"></div>
       <div style="border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;padding:12px;">
         ${listHtml(c.items,10)}
       </div>
@@ -3512,7 +3410,7 @@ function printKankyouReport(){
   if(!CATS||!CATS.length){showToast('先にレポートを生成してください',true);return;}
 
   const listHtmlP=(items,color,max=10)=>items.slice(0,max).map((item,i)=>`
-    <div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:12px;align-items:center;">
+    <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:13px;align-items:center;">
       <span style="background:${color};color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</span>
       <span style="flex:1;">${item.tags?.name||'(名称不明)'}</span>
       <span style="color:#888;white-space:nowrap;">${item._dist}m（徒歩${Math.ceil(item._dist/80)}分）</span>
@@ -3525,7 +3423,7 @@ function printKankyouReport(){
         <span style="font-size:18px;">${cat.icon}</span><span style="font-size:15px;font-weight:700;">${cat.label}</span>
         <span style="opacity:.8;margin-left:auto;font-size:12px;">${cat.items.length}件</span>
       </div>
-      <div id="pm-${cat.key}" class="map-box" data-lat="${lat}" data-lon="${lon}" data-color="${cat.color}" data-markers='${JSON.stringify(mdata).replace(/'/g,"&#39;")}' style="height:420px;border:1px solid #ddd;border-top:none;background:#eee;"></div>
+      <div id="pm-${cat.key}" class="map-box" data-lat="${lat}" data-lon="${lon}" data-color="${cat.color}" data-markers='${JSON.stringify(mdata).replace(/'/g,"&#39;")}' style="height:560px;border:1px solid #ddd;border-top:none;background:#eee;"></div>
       <div style="border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;padding:12px;">${listHtmlP(cat.items,cat.color,10)}</div>
     </div>`;
   }).join('\n');
@@ -3543,7 +3441,7 @@ body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;background:#fff;}
   @page{size:A4 portrait;margin:10mm 8mm;}
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .cat-section{page-break-inside:avoid;}
-  .map-box{height:400px!important;}
+  .map-box{height:540px!important;}
 }
 </style></head><body><div class="wrap">
 <div style="background:linear-gradient(135deg,#1a5c3a,#27ae60);color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:14px;">
