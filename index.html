@@ -1561,7 +1561,7 @@ async function doSearch(){
   document.getElementById('search-result').innerHTML=`<div class="spin-wrap"><div class="spinner"></div><div style="font-size:13px;color:var(--sub);">${addr} を調査中...</div></div>`;
   const prompt=`不動産調査の専門家として以下の住所の都市計画情報をJSONのみで返してください（前置き・後書き・コードブロック不要）。\n住所：${addr}\n{"yoto":"用途地域名","kenpei":"建蔽率数字のみ","yoseki":"容積率数字のみ","bouka":"防火指定","kodo":"高度地区","hikage":"日影規制","chiku":[{"name":"地区計画名","detail":"詳細"}],"keikaku_doro":"計画道路","note":"補足"}\n不明は「要確認」。地区計画なしはchiku:[]。`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:MODEL,max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:MODEL,max_tokens:1500,messages:[{role:'user',content:prompt}]})});
     if(!res.ok){const e=await res.json();throw new Error(e.error?.message||res.status);}
     const data=await res.json();
     const text=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
@@ -3266,7 +3266,7 @@ async function extractChosaPdf(){
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 2000,
+        max_tokens: 3000,
         messages: [{role:'user', content:[
           {type:'document', source:{type:'base64', media_type:'application/pdf', data:chosaB64}},
           {type:'text', text:prompt}
@@ -3739,8 +3739,16 @@ function clearAllTplFields(){
     'tpl-total-units','tpl-built-year','tpl-kanri-note','tpl-shuzen-history',
     'tpl-mansion-name','tpl-room-no','tpl-senyu-area','tpl-balcony',
     'tpl-takkenshi',
+    // 追加フィールド
+    'tpl-building-address','tpl-yuka-total','tpl-seller-addr',
   ];
   ids.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  // 元号リセット
+  const gengoSel = document.getElementById('tpl-gengo');
+  if(gengoSel) gengoSel.value = '';
+  // 各階床面積をリセット
+  const floorsWrap = document.getElementById('tpl-floors-wrap');
+  if(floorsWrap){ floorsWrap.innerHTML = ''; floorCount = 0; }
   // 土地行をリセット
   document.getElementById('tpl-lands-wrap').innerHTML = '';
   tplLandCount = 0;
@@ -3748,7 +3756,11 @@ function clearAllTplFields(){
   // 売主・所有者をリセット
   initSellerOwnerRows();
   // 抵当権セクションを非表示
-  document.getElementById('tpl-mortgage-section').style.display = 'none';
+  const ms = document.getElementById('tpl-mortgage-section');
+  if(ms) ms.style.display = 'none';
+  // ファイルヒントを非表示
+  const fh = document.getElementById('tpl-file-hint-box');
+  if(fh) fh.style.display = 'none';
   try{ sessionStorage.removeItem('fud_building_data'); }catch(e){}
   showToast('テンプレート入力を全クリアしました');
 }
@@ -4296,13 +4308,29 @@ function loadChosaItem(i){
   if(!list[i]) return;
   const d = list[i].data;
   const sv=(id,val)=>{const el=document.getElementById(id);if(el&&val)el.value=val;};
-  sv('cr-mansion-name',d.mansion_name);sv('cr-room-no',d.room_no);
-  sv('cr-senyu-area',d.senyu_area);sv('cr-balcony',d.balcony);
-  sv('cr-kanri-fee',d.kanri_fee);sv('cr-shuzen-fee',d.shuzen_fee);
-  sv('cr-kanri-co',d.kanri_co);sv('cr-total-units',d.total_units);
-  sv('cr-built-year',d.built_year);sv('cr-parking',d.parking);
-  sv('cr-cost-note',d.cost_note);sv('cr-kanri-note',d.kanri_note);
-  sv('cr-shuzen-history',d.shuzen_history);sv('cr-other',d.other);
+  // 基本情報
+  sv('cr-mansion-name',d.mansion_name); sv('cr-room-no',d.room_no);
+  sv('cr-total-units',d.total_units);   sv('cr-built-year',d.built_year);
+  sv('cr-senyu-area',d.senyu_area);     sv('cr-balcony',d.balcony);
+  // 管理費
+  sv('cr-kanri-fee',d.kanri_fee);       sv('cr-shuzen-fee',d.shuzen_fee);
+  sv('cr-fee-total',d.fee_total);       sv('cr-fee-payment',d.fee_payment);
+  sv('cr-fee-change',d.fee_change);     sv('cr-cost-note',d.cost_note);
+  // 滞納
+  sv('cr-taino-unit',d.taino_unit);     sv('cr-taino-all',d.taino_all);
+  sv('cr-shuzen-balance',d.shuzen_balance); sv('cr-loan',d.loan);
+  // 修繕
+  sv('cr-daiki-yotei',d.daiki_yotei);   sv('cr-shuzen-history',d.shuzen_history);
+  // 施設
+  sv('cr-parking',d.parking);           sv('cr-bike',d.bike);
+  sv('cr-jitensha',d.jitensha);         sv('cr-trunk',d.trunk);
+  // 設備
+  sv('cr-internet',d.internet);         sv('cr-catv',d.catv);
+  // 管理体制
+  sv('cr-kanri-co',d.kanri_co);
+  sv('cr-kanri-kinmu',d.kanri_kinmu);   sv('cr-kanri-tel',d.kanri_tel);
+  // 規制
+  sv('cr-kanri-note',d.kanri_note);     sv('cr-other',d.other);
   if(d.kanri_type){const sel=document.getElementById('cr-kanri-type');if(sel)[...sel.options].forEach(o=>{if(o.value&&d.kanri_type.includes(o.value))sel.value=o.value;});}
   document.getElementById('chosa-result-card').style.display='block';
   showToast('読み込みました：'+list[i].name);
