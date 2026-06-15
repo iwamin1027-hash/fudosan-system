@@ -562,7 +562,7 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
                     <div class="fi"><input type="text" id="tpl-building-address" placeholder="○○市○○町○丁目○番地"/></div>
                     <div class="fi-hint">※土地の所在とは別に記載されている建物の所在（都道府県なし）</div>
                   </div>
-                  <div class="form-group"><div class="form-label">家屋番号</div><div class="fi"><input type="text" id="tpl-kaoku-no" placeholder="○番○"/></div></div>
+                  <div class="form-group"><div class="form-label">家屋番号</div><div class="fi"><input type="text" id="tpl-kaoku-no-nk" placeholder="○番○"/></div></div>
                   <div class="form-group"><div class="form-label">種類</div><div class="fi"><input type="text" id="tpl-shurui" placeholder="居宅"/></div></div>
                   <div class="form-group" style="grid-column:1/-1;"><div class="form-label">構造</div><div class="fi"><input type="text" id="tpl-senyu-kozo" placeholder="木造スレート葺2階建"/></div></div>
                 </div>
@@ -1358,7 +1358,7 @@ async function dbxLoadAll(){
   renderPdfHistory();
   showToast('Dropboxからデータを読み込みました ☁');
 }
-const MODEL = 'claude-opus-4-5';
+const MODEL = 'claude-sonnet-4-6';
 
 // ══ STATE ═══════════════════════════════════════════
 let currentPage = 'search';
@@ -1420,6 +1420,7 @@ function showPage(name, el) {
           sv2('tpl-itto-kozo',     bd.itto_kozo);
           sv2('tpl-nobeyuka',      bd.nobeyuka);
           sv2('tpl-kaoku-no',      bd.kaoku_no);
+          sv2('tpl-kaoku-no-nk',   bd.kaoku_no);
           sv2('tpl-tatemono-name', bd.tatemono_name);
           sv2('tpl-shurui',        bd.shurui);
           sv2('tpl-senyu-kozo',    bd.senyu_kozo);
@@ -2708,6 +2709,7 @@ function applyRegHist(i){
       sv('tpl-itto-kozo',     b2.itto_kozo     || first.building_itto_kozo);
       sv('tpl-nobeyuka',      b2.nobeyuka      || first.building_nobeyuka);
       sv('tpl-kaoku-no',      b2.kaoku_no      || first.building_number);
+      sv('tpl-kaoku-no-nk',   b2.kaoku_no      || first.building_number);
       sv('tpl-tatemono-name', b2.tatemono_name || first.building_name);
       sv('tpl-shurui',        b2.shurui        || first.building_type);
       sv('tpl-senyu-kozo',    b2.kozo          || first.building_kozo);
@@ -3159,7 +3161,7 @@ getTplData = function(){
     itto_address:    g('tpl-itto-address'),
     itto_kozo:       g('tpl-itto-kozo'),
     nobeyuka:        g('tpl-nobeyuka'),
-    kaoku_no:        g('tpl-kaoku-no'),
+    kaoku_no:        g('tpl-kaoku-no') || g('tpl-kaoku-no-nk'),
     tatemono_name:   g('tpl-tatemono-name'),
     shurui:          g('tpl-shurui'),
     kozo:            g('tpl-senyu-kozo'),
@@ -4553,6 +4555,7 @@ function applyRegToTemplate(){
     const _b = first.building || {};
     // 共通
     sv('tpl-kaoku-no',      _b.kaoku_no       || first.building_number);
+    sv('tpl-kaoku-no-nk',   _b.kaoku_no       || first.building_number);
     sv('tpl-shurui',        _b.shurui         || first.building_type);
     sv('tpl-senyu-kozo',    _b.kozo           || first.building_kozo);
     sv('tpl-year',          _b.year           || first.building_year);
@@ -4634,6 +4637,7 @@ function applyRegToTemplate(){
     sv2('tpl-itto-kozo',     bd2.itto_kozo);
     sv2('tpl-nobeyuka',      bd2.nobeyuka);
     sv2('tpl-kaoku-no',      bd2.kaoku_no);
+    sv2('tpl-kaoku-no-nk',   bd2.kaoku_no);
     sv2('tpl-tatemono-name', bd2.tatemono_name);
     sv2('tpl-shurui',        bd2.shurui);
     sv2('tpl-senyu-kozo',    bd2.senyu_kozo);
