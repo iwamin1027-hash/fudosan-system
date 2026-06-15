@@ -502,13 +502,13 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
                 <!-- 専有部分 -->
                 <div class="form-grid" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
                   <div style="grid-column:1/-1;font-size:11px;font-weight:600;color:var(--sub);margin-bottom:4px;">専有部分（登記簿記載）</div>
-                  <div class="form-group"><div class="form-label">家屋番号</div><div class="fi"><input type="text" id="tpl-kaoku-no" placeholder="○○丁目○番○の○"/></div></div>
-                  <div class="form-group"><div class="form-label">建物の名称</div><div class="fi"><input type="text" id="tpl-tatemono-name" placeholder="○○マンション101"/></div></div>
+                  <div class="form-group" style="grid-column:1/-1;"><div class="form-label">家屋番号</div><div class="fi"><input type="text" id="tpl-kaoku-no" placeholder="○○丁目○番○の○（例: 新北島四丁目4番25の614）"/></div></div>
+                  <div class="form-group"><div class="form-label">建物の名称（号室番号のみ）</div><div class="fi"><input type="text" id="tpl-tatemono-name" placeholder="614"/></div><div class="fi-hint">※号室番号だけ入力（例: 614）</div></div>
                   <div class="form-group"><div class="form-label">種類</div><div class="fi"><input type="text" id="tpl-shurui" placeholder="居宅"/></div></div>
-                  <div class="form-group"><div class="form-label">専有部分の構造</div><div class="fi"><input type="text" id="tpl-senyu-kozo" placeholder="鉄骨鉄筋コンクリート造1階建"/></div></div>
-                  <div class="form-group"><div class="form-label">階部分</div><div class="fi"><input type="text" id="tpl-kai" placeholder="3"/></div></div>
-                  <div class="form-group"><div class="form-label">床面積・登記簿（㎡）</div><div class="fi"><input type="text" id="tpl-yuka-touki" placeholder="58.84"/></div></div>
-                  <div class="form-group"><div class="form-label">床面積・壁芯（㎡）</div><div class="fi"><input type="text" id="tpl-yuka-hekishin" placeholder="61.90"/></div></div>
+                  <div class="form-group" style="grid-column:1/-1;"><div class="form-label">専有部分の構造</div><div class="fi"><input type="text" id="tpl-senyu-kozo" placeholder="鉄骨鉄筋コンクリート造1階建"/></div></div>
+                  <div class="form-group"><div class="form-label">階部分（数字のみ）</div><div class="fi"><input type="text" id="tpl-kai" placeholder="6"/></div><div class="fi-hint">※数字のみ（例: 6）</div></div>
+                  <div class="form-group"><div class="form-label">床面積・登記簿（㎡）</div><div class="fi"><input type="text" id="tpl-yuka-touki" placeholder="79.35"/></div></div>
+                  <div class="form-group"><div class="form-label">床面積・壁芯（㎡）</div><div class="fi"><input type="text" id="tpl-yuka-hekishin" placeholder="82.23"/></div></div>
                 </div>
               </div>
 
@@ -1607,7 +1607,7 @@ async function analyzeRegs(){
 ・区分所有建物の場合は専有部分の階と面積
 ・非区分所有建物の場合は各階の床面積を全て抽出
 
-{"type":"土地/建物/土地建物/区分所有建物","lands":[{"land_address":"所在（○○市○○町○丁目 のみ・地番なし）","land_chiban":"地番のみ（番地の数字部分）","land_chime":"地目","land_chiseki":"地積㎡数字のみ","owner":[{"name":"氏名","address":"住所（完全な住所）","share":"持分（例：2分の1）"}],"mortgages":[{"rank":"順位番号","type":"抵当権or根抵当権","amount":"債権額（例：金1000万円）","creditor":"債権者名","debtor":"債務者名","date":"設定日（例：令和7年1月1日）","status":"現存or抹消"}],"cause":"取得原因と日付（例：令和7年1月1日売買）"}],"building":{"building_address":"建物の所在（登記簿表題部の所在・住居表示とは別）","juukyo_hyoji":"住居表示（あれば）","itto_address":"一棟の建物の所在（区分所有の場合のみ）","itto_kozo":"一棟の構造（区分所有の場合のみ）","nobeyuka":"一棟の延床面積数字のみ（区分所有の場合のみ）","kaoku_no":"家屋番号","tatemono_name":"建物の名称","shurui":"種類（例：居宅）","kozo":"構造（例：木造スレート葺2階建）","building_floors":[{"floor":"1階","area":"51.82"},{"floor":"2階","area":"40.99"},{"floor":"3階","area":"30.00"}],"yuka_total":"床面積合計数字のみ（各階面積の合計）","kai":"区分所有の場合の専有部分の階数字のみ","yuka_touki":"区分所有の場合の専有部分床面積登記簿数字のみ","yuka_hekishin":"区分所有の場合の専有部分床面積壁芯数字のみ","gengo":"建築時期元号（昭和/平成/令和）","year":"建築年数字のみ","month":"建築月数字のみ","day":"建築日数字のみ","owner":[{"name":"氏名","address":"住所（完全な住所）","share":"持分"}],"mortgages":[{"rank":"順位","type":"種類","amount":"債権額","creditor":"債権者","status":"現存or抹消"}]},"note":"特記事項"}
+{"type":"土地/建物/土地建物/区分所有建物","lands":[{"land_address":"所在（○○市○○町○丁目 のみ・地番なし）","land_chiban":"地番のみ（番地の数字部分）","land_chime":"地目","land_chiseki":"地積㎡数字のみ","owner":[{"name":"氏名","address":"住所（完全な住所）","share":"持分（例：2分の1）"}],"mortgages":[{"rank":"順位番号","type":"抵当権or根抵当権","amount":"債権額（例：金1000万円）","creditor":"債権者名","debtor":"債務者名","date":"設定日（例：令和7年1月1日）","status":"現存or抹消"}],"cause":"取得原因と日付（例：令和7年1月1日売買）"}],"building":{"building_address":"建物の所在（登記簿表題部の所在・住居表示とは別）","juukyo_hyoji":"住居表示（あれば）","itto_address":"一棟の建物の所在（区分所有の場合のみ）","itto_kozo":"一棟の構造（区分所有の場合のみ）","nobeyuka":"一棟の延床面積数字のみ（区分所有の場合のみ）","kaoku_no":"家屋番号","tatemono_name":"建物の名称（区分所有の場合は号室番号のみ。例:614）","shurui":"種類（例：居宅）","kozo":"構造（例：木造スレート葺2階建）","building_floors":[{"floor":"1階","area":"51.82"},{"floor":"2階","area":"40.99"},{"floor":"3階","area":"30.00"}],"yuka_total":"床面積合計数字のみ（各階面積の合計）","kai":"区分所有の場合の専有部分が何階にあるかの数字のみ（例: 6）","yuka_touki":"区分所有の場合の専有部分床面積登記簿数字のみ","yuka_hekishin":"区分所有の場合の専有部分床面積壁芯数字のみ","gengo":"建築時期元号（昭和/平成/令和）","year":"建築年数字のみ","month":"建築月数字のみ","day":"建築日数字のみ","owner":[{"name":"氏名","address":"住所（完全な住所）","share":"持分"}],"mortgages":[{"rank":"順位","type":"種類","amount":"債権額","creditor":"債権者","status":"現存or抹消"}]},"note":"特記事項"}
 
 情報なし→null。抹消済みも含める。building_floorsは必ず各階を個別オブジェクトとして列挙すること。`;
   const results=[];
@@ -2290,35 +2290,53 @@ const TPL_CELL_MAP = {
           cell_gengo:'H248', cell_nen:'O248', cell_tsuki:'S248', cell_hi:'U248',
           seller_addr:'F262', seller_name:'F264' },
   // ─ 区分所有（マンション）─
-  '17': { cat:'kubun', cell_itto_addr:'G201', cell_kaoku:'AL207',
-          cell_tatemono_name:'AO207', cell_shurui:'G211', cell_kozo:'AC211',
-          cell_kai:'G215', cell_yuka_touki:'P215', cell_yuka_hekishin:'X215',
-          cell_gengo:'H219', cell_nen:'O219', cell_tsuki:'S219', cell_hi:'U219',
+  // ─ 区分所有（マンション）─
+  // 実測確認済み（17-1_重要事項説明書_入力済み.xlsx 基準）
+  // 一棟: L201=所在, L203=構造, L205=延床面積
+  // 専有: L207=家屋番号, AL207=建物の名称（号室）, L209=種類, AD209=専有構造
+  //       Q211=登記簿面積, Y211=階部分, AK211=壁芯面積
+  //       L213=元号年, O213=月, S213=日
+  '17': { cat:'kubun',
+          cell_itto_addr:'L201', cell_itto_kozo:'L203', cell_nobeyuka:'L205',
+          cell_kaoku:'L207', cell_tatemono_name:'AL207',
+          cell_shurui:'L209', cell_kozo:'AD209',
+          cell_yuka_touki:'Q211', cell_kai:'Y211', cell_yuka_hekishin:'AK211',
+          cell_gengo:'L213', cell_nen:'O213', cell_tsuki:'S213',
           seller_addr:'F265', seller_name:'F267' },
-  '18': { cat:'kubun', cell_itto_addr:'G201', cell_kaoku:'AL207',
-          cell_tatemono_name:'AO207', cell_shurui:'G211', cell_kozo:'AC211',
-          cell_kai:'G215', cell_yuka_touki:'P215', cell_yuka_hekishin:'X215',
-          cell_gengo:'H219', cell_nen:'O219', cell_tsuki:'S219', cell_hi:'U219',
+  '18': { cat:'kubun',
+          cell_itto_addr:'L201', cell_itto_kozo:'L203', cell_nobeyuka:'L205',
+          cell_kaoku:'L207', cell_tatemono_name:'AL207',
+          cell_shurui:'L209', cell_kozo:'AD209',
+          cell_yuka_touki:'Q211', cell_kai:'Y211', cell_yuka_hekishin:'AK211',
+          cell_gengo:'L213', cell_nen:'O213', cell_tsuki:'S213',
           seller_addr:'F265', seller_name:'F267' },
-  '27': { cat:'kubun', cell_itto_addr:'G201', cell_kaoku:'AL207',
-          cell_tatemono_name:'AO207', cell_shurui:'G211', cell_kozo:'AC211',
-          cell_kai:'G215', cell_yuka_touki:'P215', cell_yuka_hekishin:'X215',
-          cell_gengo:'H219', cell_nen:'O219', cell_tsuki:'S219', cell_hi:'U219',
+  '27': { cat:'kubun',
+          cell_itto_addr:'L201', cell_itto_kozo:'L203', cell_nobeyuka:'L205',
+          cell_kaoku:'L207', cell_tatemono_name:'AL207',
+          cell_shurui:'L209', cell_kozo:'AD209',
+          cell_yuka_touki:'Q211', cell_kai:'Y211', cell_yuka_hekishin:'AK211',
+          cell_gengo:'L213', cell_nen:'O213', cell_tsuki:'S213',
           seller_addr:'F263', seller_name:'F265' },
-  '28': { cat:'kubun', cell_itto_addr:'G201', cell_kaoku:'AL207',
-          cell_tatemono_name:'AO207', cell_shurui:'G211', cell_kozo:'AC211',
-          cell_kai:'G215', cell_yuka_touki:'P215', cell_yuka_hekishin:'X215',
-          cell_gengo:'H219', cell_nen:'O219', cell_tsuki:'S219', cell_hi:'U219',
+  '28': { cat:'kubun',
+          cell_itto_addr:'L201', cell_itto_kozo:'L203', cell_nobeyuka:'L205',
+          cell_kaoku:'L207', cell_tatemono_name:'AL207',
+          cell_shurui:'L209', cell_kozo:'AD209',
+          cell_yuka_touki:'Q211', cell_kai:'Y211', cell_yuka_hekishin:'AK211',
+          cell_gengo:'L213', cell_nen:'O213', cell_tsuki:'S213',
           seller_addr:'F263', seller_name:'F265' },
-  '37': { cat:'kubun', cell_itto_addr:'G201', cell_kaoku:'AL207',
-          cell_tatemono_name:'AO207', cell_shurui:'G211', cell_kozo:'AC211',
-          cell_kai:'G215', cell_yuka_touki:'P215', cell_yuka_hekishin:'X215',
-          cell_gengo:'H219', cell_nen:'O219', cell_tsuki:'S219', cell_hi:'U219',
+  '37': { cat:'kubun',
+          cell_itto_addr:'L201', cell_itto_kozo:'L203', cell_nobeyuka:'L205',
+          cell_kaoku:'L207', cell_tatemono_name:'AL207',
+          cell_shurui:'L209', cell_kozo:'AD209',
+          cell_yuka_touki:'Q211', cell_kai:'Y211', cell_yuka_hekishin:'AK211',
+          cell_gengo:'L213', cell_nen:'O213', cell_tsuki:'S213',
           seller_addr:'F265', seller_name:'F267' },
-  '38': { cat:'kubun', cell_itto_addr:'G201', cell_kaoku:'AL207',
-          cell_tatemono_name:'AO207', cell_shurui:'G211', cell_kozo:'AC211',
-          cell_kai:'G215', cell_yuka_touki:'P215', cell_yuka_hekishin:'X215',
-          cell_gengo:'H219', cell_nen:'O219', cell_tsuki:'S219', cell_hi:'U219',
+  '38': { cat:'kubun',
+          cell_itto_addr:'L201', cell_itto_kozo:'L203', cell_nobeyuka:'L205',
+          cell_kaoku:'L207', cell_tatemono_name:'AL207',
+          cell_shurui:'L209', cell_kozo:'AD209',
+          cell_yuka_touki:'Q211', cell_kai:'Y211', cell_yuka_hekishin:'AK211',
+          cell_gengo:'L213', cell_nen:'O213', cell_tsuki:'S213',
           seller_addr:'F265', seller_name:'F267' },
 };
 
@@ -2334,6 +2352,30 @@ function getTplNum(){
 }
 
 function sendTplToChat(){
+  // 調査報告書データを自動取得してテンプレートフィールドに事前反映
+  const chosa = (typeof getCurrentChosaData === 'function') ? getCurrentChosaData() : {};
+  if(chosa.mansion_name || chosa.kanri_fee || chosa.shuzen_fee){
+    const svIfEmpty = (id,val) => {
+      const el = document.getElementById(id);
+      if(el && val && !el.value) el.value = val;
+    };
+    svIfEmpty('tpl-mansion-name',  chosa.mansion_name);
+    svIfEmpty('tpl-room-no',       chosa.room_no);
+    svIfEmpty('tpl-senyu-area',    chosa.senyu_area);
+    svIfEmpty('tpl-balcony',       chosa.balcony);
+    svIfEmpty('tpl-kanri-fee',     chosa.kanri_fee);
+    svIfEmpty('tpl-shuzen-fee',    chosa.shuzen_fee);
+    svIfEmpty('tpl-kanri-co',      chosa.kanri_co);
+    svIfEmpty('tpl-total-units',   chosa.total_units);
+    svIfEmpty('tpl-built-year',    chosa.built_year);
+    svIfEmpty('tpl-kanri-note',    chosa.kanri_note);
+    svIfEmpty('tpl-shuzen-history',chosa.shuzen_history);
+    if(chosa.kanri_type){
+      const sel = document.getElementById('tpl-kanri-type');
+      if(sel && !sel.value) [...sel.options].forEach(o=>{if(o.value&&chosa.kanri_type.includes(o.value))sel.value=o.value;});
+    }
+  }
+
   const data = typeof getTplData==='function' ? getTplData() : {};
   const lands = data.lands || [];
   const tplNum = getTplNum();
@@ -2418,32 +2460,52 @@ ${floors.length>0 ? floors.map((f,i)=>
     msg += `
 
 【建物情報（登記簿記載）— 区分所有Excelセル指定】
-■ 一棟の所在 → ${cm.cell_itto_addr||'G201'}に「${bd.itto_address||'未入力'}」
-■ 家屋番号 → ${cm.cell_kaoku||'AL207'}に「${bd.kaoku_no||'未入力'}」
-■ 建物の名称 → ${cm.cell_tatemono_name||'AO207'}に「${bd.tatemono_name||'未入力'}」
-■ 種類 → ${cm.cell_shurui||'G211'}に「${bd.shurui||'未入力'}」
-■ 専有部分の構造 → ${cm.cell_kozo||'AC211'}に「${bd.kozo||'未入力'}」
-■ 階部分 → ${cm.cell_kai||'G215'}に「${bd.kai||'未入力'}」
-■ 床面積（登記簿）→ ${cm.cell_yuka_touki||'P215'}に「${bd.yuka_touki||'未入力'}」
-■ 床面積（壁芯）→ ${cm.cell_yuka_hekishin||'X215'}に「${bd.yuka_hekishin||'未入力'}」
-■ 建築時期 → ${cm.cell_gengo||'H219'}に「${bd.gengo||''}${bd.year||''}」/${cm.cell_nen||'O219'}に「${bd.month||''}」/${cm.cell_tsuki||'S219'}に「${bd.day||''}」
+■ 一棟の所在 → ${cm.cell_itto_addr||'L201'}に「${bd.itto_address||'未入力'}」
+■ 一棟の構造 → ${cm.cell_itto_kozo||'L203'}に「${bd.itto_kozo||'未入力'}」
+■ 延床面積 → ${cm.cell_nobeyuka||'L205'}に「${bd.nobeyuka||'未入力'}」
+■ 家屋番号 → ${cm.cell_kaoku||'L207'}に「${bd.kaoku_no||'未入力'}」
+■ 建物の名称（号室）→ ${cm.cell_tatemono_name||'AL207'}に「${bd.tatemono_name||'未入力'}」
+  ※建物の名称欄には号室番号のみ入力（例: 614）
+■ 種類 → ${cm.cell_shurui||'L209'}に「${bd.shurui||'未入力'}」
+■ 専有部分の構造 → ${cm.cell_kozo||'AD209'}に「${bd.kozo||'未入力'}」
+■ 床面積（登記簿）→ ${cm.cell_yuka_touki||'Q211'}に「${bd.yuka_touki||'未入力'}」
+■ 階部分 → ${cm.cell_kai||'Y211'}に「${bd.kai||'未入力'}」（数字のみ。例: 6）
+■ 床面積（壁芯）→ ${cm.cell_yuka_hekishin||'AK211'}に「${bd.yuka_hekishin||'未入力'}」
+■ 建築時期 → ${cm.cell_gengo||'L213'}に「${bd.gengo||''}${bd.year||''}」/${cm.cell_nen||'O213'}に「${bd.month||''}」/${cm.cell_tsuki||'S213'}に「${bd.day||''}」
 ■ 売主住所 → ${cm.seller_addr||'F265'}に「${data.seller_addr||'未入力'}」`;
-    if(data.mansion_name||data.kanri_fee){
-      msg += `
 
-【区分所有建物情報（管理情報）】
-マンション名: ${data.mansion_name||'未入力'}
-部屋番号: ${data.room_no||'未入力'}
-専有面積: ${data.senyu_area||'未入力'}
-バルコニー: ${data.balcony||'未入力'}
-管理費: ${data.kanri_fee||'未入力'}
-修繕積立金: ${data.shuzen_fee||'未入力'}
-管理会社: ${data.kanri_co||'未入力'}
-管理形態: ${data.kanri_type||'未入力'}
-総戸数: ${data.total_units||'未入力'}
-管理規約特記: ${data.kanri_note||'なし'}
-修繕履歴: ${data.shuzen_history||'なし'}`;
-    }
+    // 調査報告書データ（テンプレートフィールドまたはchosaから取得）
+    const chosaForMsg = (typeof getCurrentChosaData==='function') ? getCurrentChosaData() : {};
+    const mn  = data.mansion_name  || chosaForMsg.mansion_name  || '';
+    const rno = data.room_no       || chosaForMsg.room_no       || '';
+    const sa  = data.senyu_area    || chosaForMsg.senyu_area    || '';
+    const bl  = data.balcony       || chosaForMsg.balcony       || '';
+    const kf  = data.kanri_fee     || chosaForMsg.kanri_fee     || '';
+    const sf  = data.shuzen_fee    || chosaForMsg.shuzen_fee    || '';
+    const kc  = data.kanri_co      || chosaForMsg.kanri_co      || '';
+    const kt  = data.kanri_type    || chosaForMsg.kanri_type    || '';
+    const tu  = data.total_units   || chosaForMsg.total_units   || '';
+    const by  = data.built_year    || chosaForMsg.built_year    || '';
+    const pk  = data.parking       || chosaForMsg.parking       || '';
+    const kn  = data.kanri_note    || chosaForMsg.kanri_note    || '';
+    const sh  = data.shuzen_history|| chosaForMsg.shuzen_history|| '';
+
+    msg += `
+
+【区分所有建物情報（重要事項調査報告書より）】
+マンション名: ${mn||'未入力'}
+部屋番号（号室）: ${rno||'未入力'}
+専有面積: ${sa||'未入力'}
+バルコニー面積: ${bl||'未入力'}
+管理費（月額）: ${kf||'未入力'}
+修繕積立金（月額）: ${sf||'未入力'}
+管理会社: ${kc||'未入力'}
+管理形態: ${kt||'未入力'}
+総戸数: ${tu||'未入力'}
+築年月: ${by||'未入力'}
+駐車場: ${pk||'未入力'}
+管理規約の特記事項（ペット・楽器・民泊等）: ${kn||'なし'}
+修繕履歴・大規模修繕計画: ${sh||'なし'}`;
   } else {
     // 土地のみ
     msg += `
