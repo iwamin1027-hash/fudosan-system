@@ -287,23 +287,65 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
           <!-- 抽出結果（手動編集可） -->
           <div class="card" id="chosa-result-card" style="display:none;">
             <div class="card-title">抽出結果（手動修正可）</div>
-            <div class="form-grid" style="margin-bottom:10px;">
+
+            <div style="font-size:11px;font-weight:700;color:var(--accent);margin:0 0 6px;">🏢 基本情報</div>
+            <div class="form-grid" style="margin-bottom:12px;">
               <div class="form-group"><div class="form-label">マンション名</div><div class="fi"><input type="text" id="cr-mansion-name" placeholder="○○マンション"/></div></div>
-              <div class="form-group"><div class="form-label">部屋番号</div><div class="fi"><input type="text" id="cr-room-no" placeholder="101号室"/></div></div>
+              <div class="form-group"><div class="form-label">対象住戸（号室）</div><div class="fi"><input type="text" id="cr-room-no" placeholder="614号室"/></div></div>
+              <div class="form-group"><div class="form-label">総戸数</div><div class="fi"><input type="text" id="cr-total-units" placeholder="205戸"/></div></div>
+              <div class="form-group"><div class="form-label">竣工年月</div><div class="fi"><input type="text" id="cr-built-year" placeholder="1985年2月"/></div></div>
               <div class="form-group"><div class="form-label">専有面積</div><div class="fi"><input type="text" id="cr-senyu-area" placeholder="65.50㎡"/></div></div>
               <div class="form-group"><div class="form-label">バルコニー面積</div><div class="fi"><input type="text" id="cr-balcony" placeholder="8.20㎡"/></div></div>
-              <div class="form-group"><div class="form-label">管理費（月額）</div><div class="fi"><input type="text" id="cr-kanri-fee" placeholder="15,000円"/></div></div>
-              <div class="form-group"><div class="form-label">修繕積立金（月額）</div><div class="fi"><input type="text" id="cr-shuzen-fee" placeholder="10,000円"/></div></div>
-              <div class="form-group"><div class="form-label">管理会社</div><div class="fi"><input type="text" id="cr-kanri-co" placeholder="○○管理株式会社"/></div></div>
-              <div class="form-group"><div class="form-label">管理形態</div><div class="fi"><select id="cr-kanri-type"><option value="">未設定</option><option>全部委託</option><option>一部委託</option><option>自主管理</option></select></div></div>
-              <div class="form-group"><div class="form-label">総戸数</div><div class="fi"><input type="text" id="cr-total-units" placeholder="50戸"/></div></div>
-              <div class="form-group"><div class="form-label">築年月</div><div class="fi"><input type="text" id="cr-built-year" placeholder="2005年3月"/></div></div>
-              <div class="form-group"><div class="form-label">駐車場</div><div class="fi"><input type="text" id="cr-parking" placeholder="機械式30台・月額20,000円"/></div></div>
+            </div>
+
+            <div style="font-size:11px;font-weight:700;color:var(--accent);margin:0 0 6px;">💰 管理費・修繕積立金</div>
+            <div class="form-grid" style="margin-bottom:12px;">
+              <div class="form-group"><div class="form-label">管理費（月額）</div><div class="fi"><input type="text" id="cr-kanri-fee" placeholder="2,780円"/></div></div>
+              <div class="form-group"><div class="form-label">修繕積立金（月額）</div><div class="fi"><input type="text" id="cr-shuzen-fee" placeholder="17,950円"/></div></div>
+              <div class="form-group"><div class="form-label">月額合計</div><div class="fi"><input type="text" id="cr-fee-total" placeholder="20,730円"/></div></div>
+              <div class="form-group"><div class="form-label">支払方法</div><div class="fi"><input type="text" id="cr-fee-payment" placeholder="集金代行（三井住友カード）"/></div></div>
+              <div class="form-group"><div class="form-label">管理費等変更予定</div><div class="fi"><input type="text" id="cr-fee-change" placeholder="なし / 〇〇年度より値上げ予定"/></div></div>
               <div class="form-group"><div class="form-label">管理費・積立金の特記</div><div class="fi"><input type="text" id="cr-cost-note" placeholder="滞納なし・値上げ予定等"/></div></div>
             </div>
-            <div class="form-group" style="margin-bottom:8px;"><div class="form-label">管理規約の特記事項（ペット可否・楽器・民泊等）</div><div class="fi"><textarea id="cr-kanri-note" style="min-height:60px;"></textarea></div></div>
-            <div class="form-group" style="margin-bottom:12px;"><div class="form-label">修繕履歴・大規模修繕計画</div><div class="fi"><textarea id="cr-shuzen-history" style="min-height:60px;"></textarea></div></div>
-            <div class="form-group" style="margin-bottom:12px;"><div class="form-label">その他の重要事項</div><div class="fi"><textarea id="cr-other" style="min-height:60px;"></textarea></div></div>
+
+            <div style="font-size:11px;font-weight:700;color:var(--accent);margin:0 0 6px;">⚠️ 滞納状況</div>
+            <div class="form-grid" style="margin-bottom:12px;">
+              <div class="form-group"><div class="form-label">対象住戸の滞納額</div><div class="fi"><input type="text" id="cr-taino-unit" placeholder="0円"/></div></div>
+              <div class="form-group"><div class="form-label">棟全体の滞納額</div><div class="fi"><input type="text" id="cr-taino-all" placeholder="65,370円"/></div></div>
+              <div class="form-group"><div class="form-label">修繕積立金繰越残高</div><div class="fi"><input type="text" id="cr-shuzen-balance" placeholder="261,267,255円"/></div></div>
+              <div class="form-group"><div class="form-label">借入金残高</div><div class="fi"><input type="text" id="cr-loan" placeholder="0円 / なし"/></div></div>
+            </div>
+
+            <div style="font-size:11px;font-weight:700;color:var(--accent);margin:0 0 6px;">🏗 大規模修繕・修繕履歴</div>
+            <div class="form-group" style="margin-bottom:6px;"><div class="form-label">大規模修繕工事の実施予定</div><div class="fi"><input type="text" id="cr-daiki-yotei" placeholder="なし / 令和○年度予定"/></div></div>
+            <div class="form-group" style="margin-bottom:12px;"><div class="form-label">修繕履歴・修繕積立金計画</div><div class="fi"><textarea id="cr-shuzen-history" style="min-height:50px;" placeholder="修繕履歴あり（管理室保管）・大規模修繕予定なし など"></textarea></div></div>
+
+            <div style="font-size:11px;font-weight:700;color:var(--accent);margin:0 0 6px;">🚗 駐車場・付属施設</div>
+            <div class="form-grid" style="margin-bottom:12px;">
+              <div class="form-group" style="grid-column:1/-1;"><div class="form-label">駐車場</div><div class="fi"><input type="text" id="cr-parking" placeholder="164台・11,500円/月・空きなし"/></div></div>
+              <div class="form-group"><div class="form-label">バイク置場</div><div class="fi"><input type="text" id="cr-bike" placeholder="有・1,000円/月・空きなし"/></div></div>
+              <div class="form-group"><div class="form-label">自転車置場</div><div class="fi"><input type="text" id="cr-jitensha" placeholder="有・300円/年"/></div></div>
+              <div class="form-group"><div class="form-label">トランクルーム</div><div class="fi"><input type="text" id="cr-trunk" placeholder="なし"/></div></div>
+            </div>
+
+            <div style="font-size:11px;font-weight:700;color:var(--accent);margin:0 0 6px;">📡 設備・インフラ</div>
+            <div class="form-grid" style="margin-bottom:12px;">
+              <div class="form-group"><div class="form-label">インターネット</div><div class="fi"><input type="text" id="cr-internet" placeholder="NTT・オプテージ"/></div></div>
+              <div class="form-group"><div class="form-label">ケーブルTV・BS・CS</div><div class="fi"><input type="text" id="cr-catv" placeholder="ベイコム（BS/CSは有料）"/></div></div>
+            </div>
+
+            <div style="font-size:11px;font-weight:700;color:var(--accent);margin:0 0 6px;">🏢 管理体制</div>
+            <div class="form-grid" style="margin-bottom:12px;">
+              <div class="form-group"><div class="form-label">管理会社</div><div class="fi"><input type="text" id="cr-kanri-co" placeholder="日本ハウズイング株式会社"/></div></div>
+              <div class="form-group"><div class="form-label">管理形態</div><div class="fi"><select id="cr-kanri-type"><option value="">未設定</option><option>全部委託</option><option>一部委託</option><option>自主管理</option></select></div></div>
+              <div class="form-group"><div class="form-label">管理員勤務日・時間</div><div class="fi"><input type="text" id="cr-kanri-kinmu" placeholder="月火木金土 9:00〜17:00"/></div></div>
+              <div class="form-group"><div class="form-label">管理事務所電話番号</div><div class="fi"><input type="text" id="cr-kanri-tel" placeholder="06-6683-5598"/></div></div>
+            </div>
+
+            <div style="font-size:11px;font-weight:700;color:var(--accent);margin:0 0 6px;">📋 使用規制・管理規約</div>
+            <div class="form-group" style="margin-bottom:8px;"><div class="form-label">管理規約の特記事項（ペット・楽器・民泊・フローリング等）</div><div class="fi"><textarea id="cr-kanri-note" style="min-height:80px;" placeholder="ペット飼育可（規程あり）&#10;民泊・事務所使用不可&#10;フローリング制限：遮音等級L-45以上&#10;工事着手前10日前に申請書提出"></textarea></div></div>
+            <div class="form-group" style="margin-bottom:12px;"><div class="form-label">その他の重要事項</div><div class="fi"><textarea id="cr-other" style="min-height:60px;" placeholder="アスベスト調査なし・耐震診断なし など"></textarea></div></div>
+
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <button class="pbtn" style="flex:1;" onclick="applyChosaToTemplate()">📝 テンプレート入力に反映</button>
               <button class="obtn" onclick="copyChosaText()">コピー</button>
@@ -2476,36 +2518,49 @@ ${floors.length>0 ? floors.map((f,i)=>
 
     // 調査報告書データ（テンプレートフィールドまたはchosaから取得）
     const chosaForMsg = (typeof getCurrentChosaData==='function') ? getCurrentChosaData() : {};
-    const mn  = data.mansion_name  || chosaForMsg.mansion_name  || '';
-    const rno = data.room_no       || chosaForMsg.room_no       || '';
-    const sa  = data.senyu_area    || chosaForMsg.senyu_area    || '';
-    const bl  = data.balcony       || chosaForMsg.balcony       || '';
-    const kf  = data.kanri_fee     || chosaForMsg.kanri_fee     || '';
-    const sf  = data.shuzen_fee    || chosaForMsg.shuzen_fee    || '';
-    const kc  = data.kanri_co      || chosaForMsg.kanri_co      || '';
-    const kt  = data.kanri_type    || chosaForMsg.kanri_type    || '';
-    const tu  = data.total_units   || chosaForMsg.total_units   || '';
-    const by  = data.built_year    || chosaForMsg.built_year    || '';
-    const pk  = data.parking       || chosaForMsg.parking       || '';
-    const kn  = data.kanri_note    || chosaForMsg.kanri_note    || '';
-    const sh  = data.shuzen_history|| chosaForMsg.shuzen_history|| '';
+    const c_ = k => data[k] || chosaForMsg[k] || '';
 
     msg += `
 
 【区分所有建物情報（重要事項調査報告書より）】
-マンション名: ${mn||'未入力'}
-部屋番号（号室）: ${rno||'未入力'}
-専有面積: ${sa||'未入力'}
-バルコニー面積: ${bl||'未入力'}
-管理費（月額）: ${kf||'未入力'}
-修繕積立金（月額）: ${sf||'未入力'}
-管理会社: ${kc||'未入力'}
-管理形態: ${kt||'未入力'}
-総戸数: ${tu||'未入力'}
-築年月: ${by||'未入力'}
-駐車場: ${pk||'未入力'}
-管理規約の特記事項（ペット・楽器・民泊等）: ${kn||'なし'}
-修繕履歴・大規模修繕計画: ${sh||'なし'}`;
+マンション名: ${c_('mansion_name')||'未入力'}
+部屋番号（号室）: ${c_('room_no')||'未入力'}
+総戸数: ${c_('total_units')||'未入力'}
+竣工年月: ${c_('built_year')||'未入力'}
+専有面積: ${c_('senyu_area')||'未入力'}
+バルコニー面積: ${c_('balcony')||'未入力'}
+
+管理費（月額）: ${c_('kanri_fee')||'未入力'}
+修繕積立金（月額）: ${c_('shuzen_fee')||'未入力'}
+月額合計: ${c_('fee_total')||'未入力'}
+管理費等支払方法: ${c_('fee_payment')||'未入力'}
+管理費等変更予定: ${c_('fee_change')||'未入力'}
+
+対象住戸の滞納額: ${c_('taino_unit')||'未入力'}
+棟全体の滞納額: ${c_('taino_all')||'未入力'}
+修繕積立金繰越残高: ${c_('shuzen_balance')||'未入力'}
+借入金残高: ${c_('loan')||'未入力'}
+
+大規模修繕工事実施予定: ${c_('daiki_yotei')||'未入力'}
+修繕履歴: ${c_('shuzen_history')||'未入力'}
+
+駐車場: ${c_('parking')||'未入力'}
+バイク置場: ${c_('bike')||'未入力'}
+自転車置場: ${c_('jitensha')||'未入力'}
+トランクルーム: ${c_('trunk')||'未入力'}
+
+インターネット: ${c_('internet')||'未入力'}
+ケーブルTV・BS・CS: ${c_('catv')||'未入力'}
+
+管理会社: ${c_('kanri_co')||'未入力'}
+管理形態: ${c_('kanri_type')||'未入力'}
+管理員勤務: ${c_('kanri_kinmu')||'未入力'}
+管理事務所電話: ${c_('kanri_tel')||'未入力'}
+
+管理規約・使用制限:
+${c_('kanri_note')||'なし'}
+
+その他重要事項: ${c_('other')||'なし'}`;
   } else {
     // 土地のみ
     msg += `
@@ -3322,11 +3377,54 @@ async function extractChosaPdf2(){
   btn.disabled = true;
   st.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><div class="spinner" style="width:16px;height:16px;flex-shrink:0;"></div> '+chosaFiles2.length+'件のPDFを解析中...</div>';
 
-  const prompt = `この不動産管理組合の重要事項調査報告書または管理規約PDFから情報を抽出してJSONのみで返してください（前置き・後書き・コードブロック不要）。
+  const prompt = `この「管理に係る重要事項調査報告書」PDFから全情報を抽出してJSONのみで返してください（前置き・後書き・コードブロック一切不要）。
 
-{"mansion_name":"マンション名","room_no":"部屋番号","senyu_area":"専有面積㎡","balcony":"バルコニー面積㎡","kanri_fee":"管理費月額","shuzen_fee":"修繕積立金月額","kanri_co":"管理会社名","kanri_type":"管理形態（全部委託・一部委託・自主管理）","total_units":"総戸数","built_year":"築年月","parking":"駐車場情報","cost_note":"管理費・積立金の特記事項","kanri_note":"管理規約特記事項（ペット可否・楽器・民泊・用途制限など）","shuzen_history":"修繕履歴・大規模修繕計画","other":"その他重要事項"}
+【抽出方針】
+・数字は単位付きで正確に抽出（例: 2,780円、17,950円）
+・「なし」「無」「不可」などの否定情報も必ず抽出
+・不明・記載なしの場合はnull
 
-情報がない項目はnullにしてください。`;
+{
+  "mansion_name": "マンション名（物件名称）",
+  "room_no": "対象住戸の号室（例: 614号室）",
+  "total_units": "総戸数（例: 205戸）",
+  "built_year": "竣工年月（例: 1985年2月）",
+  "senyu_area": "専有面積㎡（記載があれば）",
+  "balcony": "バルコニー面積㎡（記載があれば）",
+
+  "kanri_fee": "管理費月額（例: 2,780円）",
+  "shuzen_fee": "修繕積立金月額（例: 17,950円）",
+  "fee_total": "月額合計（例: 20,730円）",
+  "fee_payment": "管理費等支払方法（例: 集金代行・三井住友カード）",
+  "fee_change": "管理費等変更予定（例: なし / ○年度より値上げ予定）",
+  "cost_note": "管理費・積立金に関するその他特記事項",
+
+  "taino_unit": "対象住戸の滞納額（例: 0円）",
+  "taino_all": "棟全体の滞納額合計（例: 65,370円）",
+  "shuzen_balance": "修繕積立金会計繰越金合計（例: 261,267,255円）",
+  "loan": "借入金残高（例: 0円・なし）",
+
+  "daiki_yotei": "大規模修繕工事の実施予定（例: なし / ○年度予定）",
+  "shuzen_history": "修繕履歴の有無と概要（例: 有・管理室保管）",
+
+  "parking": "駐車場の概要（台数・使用料・空き状況・特記）",
+  "bike": "バイク置場（有無・使用料・空き）",
+  "jitensha": "自転車置場（有無・使用料・空き）",
+  "trunk": "トランクルーム（有無）",
+
+  "internet": "インターネット設備（例: NTT・オプテージ）",
+  "catv": "ケーブルTV・BS・CS設備（例: ベイコム）",
+
+  "kanri_co": "管理会社名",
+  "kanri_type": "管理形態（全部委託・一部委託・自主管理）",
+  "kanri_kinmu": "管理員勤務日・勤務時間",
+  "kanri_tel": "管理事務所電話番号",
+
+  "kanri_note": "管理規約・使用制限の重要事項を全て列挙（ペット可否・楽器・民泊・事務所使用・フローリング制限・工事申請ルール・一括受電等）",
+  "other": "その他の重要事項（アスベスト調査・耐震診断・建替決議・管理計画認定等）"
+}
+
+情報がない項目はnullにしてください。管理費・修繕積立金は対象住戸の金額を抽出してください。`;
 
   const allResults = {};
   for(let i=0; i<chosaB64s2.length; i++){
@@ -3351,22 +3449,54 @@ async function extractChosaPdf2(){
   // 結果をフォームに反映
   chosaData = allResults;
   const sv = (id,val) => { const el=document.getElementById(id); if(el&&val) el.value=val; };
+
+  // 基本情報
   sv('cr-mansion-name',  allResults.mansion_name);
   sv('cr-room-no',       allResults.room_no);
-  sv('cr-senyu-area',    allResults.senyu_area);
-  sv('cr-balcony',       allResults.balcony);
-  // Supabase作業履歴保存
-  saveWorkHistory('chosa', `重要事項調査：${allResults.mansion_name||''}`, {mansion: allResults.mansion_name}, '');
-  sv('cr-kanri-fee',     allResults.kanri_fee);
-  sv('cr-shuzen-fee',    allResults.shuzen_fee);
-  sv('cr-kanri-co',      allResults.kanri_co);
   sv('cr-total-units',   allResults.total_units);
   sv('cr-built-year',    allResults.built_year);
-  sv('cr-parking',       allResults.parking);
+  sv('cr-senyu-area',    allResults.senyu_area);
+  sv('cr-balcony',       allResults.balcony);
+
+  // 管理費・積立金
+  sv('cr-kanri-fee',     allResults.kanri_fee);
+  sv('cr-shuzen-fee',    allResults.shuzen_fee);
+  sv('cr-fee-total',     allResults.fee_total);
+  sv('cr-fee-payment',   allResults.fee_payment);
+  sv('cr-fee-change',    allResults.fee_change);
   sv('cr-cost-note',     allResults.cost_note);
-  sv('cr-kanri-note',    allResults.kanri_note);
+
+  // 滞納・財務
+  sv('cr-taino-unit',    allResults.taino_unit);
+  sv('cr-taino-all',     allResults.taino_all);
+  sv('cr-shuzen-balance',allResults.shuzen_balance);
+  sv('cr-loan',          allResults.loan);
+
+  // 修繕
+  sv('cr-daiki-yotei',   allResults.daiki_yotei);
   sv('cr-shuzen-history',allResults.shuzen_history);
+
+  // 付属施設
+  sv('cr-parking',       allResults.parking);
+  sv('cr-bike',          allResults.bike);
+  sv('cr-jitensha',      allResults.jitensha);
+  sv('cr-trunk',         allResults.trunk);
+
+  // 設備
+  sv('cr-internet',      allResults.internet);
+  sv('cr-catv',          allResults.catv);
+
+  // 管理体制
+  sv('cr-kanri-co',      allResults.kanri_co);
+  sv('cr-kanri-kinmu',   allResults.kanri_kinmu);
+  sv('cr-kanri-tel',     allResults.kanri_tel);
+
+  // 規制・その他
+  sv('cr-kanri-note',    allResults.kanri_note);
   sv('cr-other',         allResults.other);
+
+  // Supabase作業履歴保存
+  saveWorkHistory('chosa', `重要事項調査：${allResults.mansion_name||''}`, {mansion: allResults.mansion_name}, '');
 
   if(allResults.kanri_type){
     const sel = document.getElementById('cr-kanri-type');
@@ -3384,18 +3514,33 @@ function getCurrentChosaData(){
   return {
     mansion_name:   g('cr-mansion-name'),
     room_no:        g('cr-room-no'),
+    total_units:    g('cr-total-units'),
+    built_year:     g('cr-built-year'),
     senyu_area:     g('cr-senyu-area'),
     balcony:        g('cr-balcony'),
     kanri_fee:      g('cr-kanri-fee'),
     shuzen_fee:     g('cr-shuzen-fee'),
+    fee_total:      g('cr-fee-total'),
+    fee_payment:    g('cr-fee-payment'),
+    fee_change:     g('cr-fee-change'),
+    cost_note:      g('cr-cost-note'),
+    taino_unit:     g('cr-taino-unit'),
+    taino_all:      g('cr-taino-all'),
+    shuzen_balance: g('cr-shuzen-balance'),
+    loan:           g('cr-loan'),
+    daiki_yotei:    g('cr-daiki-yotei'),
+    shuzen_history: g('cr-shuzen-history'),
+    parking:        g('cr-parking'),
+    bike:           g('cr-bike'),
+    jitensha:       g('cr-jitensha'),
+    trunk:          g('cr-trunk'),
+    internet:       g('cr-internet'),
+    catv:           g('cr-catv'),
     kanri_co:       g('cr-kanri-co'),
     kanri_type:     g('cr-kanri-type'),
-    total_units:    g('cr-total-units'),
-    built_year:     g('cr-built-year'),
-    parking:        g('cr-parking'),
-    cost_note:      g('cr-cost-note'),
+    kanri_kinmu:    g('cr-kanri-kinmu'),
+    kanri_tel:      g('cr-kanri-tel'),
     kanri_note:     g('cr-kanri-note'),
-    shuzen_history: g('cr-shuzen-history'),
     other:          g('cr-other'),
   };
 }
@@ -3428,11 +3573,21 @@ function applyChosaToTemplate(){
 function copyChosaText(){
   const d = getCurrentChosaData();
   const text = Object.entries({
-    'マンション名':d.mansion_name,'部屋番号':d.room_no,'専有面積':d.senyu_area,
-    'バルコニー':d.balcony,'管理費':d.kanri_fee,'修繕積立金':d.shuzen_fee,
-    '管理会社':d.kanri_co,'管理形態':d.kanri_type,'総戸数':d.total_units,
-    '築年月':d.built_year,'駐車場':d.parking,'管理費特記':d.cost_note,
-    '管理規約特記':d.kanri_note,'修繕履歴':d.shuzen_history,'その他':d.other,
+    'マンション名':d.mansion_name, '対象住戸':d.room_no,
+    '総戸数':d.total_units, '竣工年月':d.built_year,
+    '専有面積':d.senyu_area, 'バルコニー':d.balcony,
+    '管理費':d.kanri_fee, '修繕積立金':d.shuzen_fee,
+    '月額合計':d.fee_total, '支払方法':d.fee_payment,
+    '変更予定':d.fee_change, '管理費特記':d.cost_note,
+    '住戸滞納額':d.taino_unit, '棟全体滞納':d.taino_all,
+    '修繕積立残高':d.shuzen_balance, '借入金':d.loan,
+    '大規模修繕予定':d.daiki_yotei, '修繕履歴':d.shuzen_history,
+    '駐車場':d.parking, 'バイク置場':d.bike,
+    '自転車置場':d.jitensha, 'トランクルーム':d.trunk,
+    'インターネット':d.internet, 'CATV':d.catv,
+    '管理会社':d.kanri_co, '管理形態':d.kanri_type,
+    '管理員勤務':d.kanri_kinmu, '管理事務所電話':d.kanri_tel,
+    '管理規約特記':d.kanri_note, 'その他':d.other,
   }).filter(([,v])=>v).map(([k,v])=>k+'：'+v).join('\n');
   navigator.clipboard.writeText(text).then(()=>showToast('コピーしました'));
 }
